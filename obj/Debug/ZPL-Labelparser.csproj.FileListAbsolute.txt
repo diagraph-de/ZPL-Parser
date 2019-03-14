@@ -1,0 +1,11 @@
+C:\Users\daniel\Projekte\ZPL\ZPLParser\bin\Debug\ZPLParser.dll
+C:\Users\daniel\Projekte\ZPL\ZPLParser\bin\Debug\ZPLParser.pdb
+C:\Users\daniel\Projekte\ZPL\ZPLParser\obj\Debug\ZPL-Labelparser.csprojResolveAssemblyReference.cache
+C:\Users\daniel\Projekte\ZPL\ZPLParser\obj\Debug\ZPLParser.dll
+C:\Users\daniel\Projekte\ZPL\ZPLParser\obj\Debug\ZPLParser.pdb
+C:\Users\daniel\Projekte\Labelparser\ZPL-Parser\bin\Debug\ZPLParser.dll
+C:\Users\daniel\Projekte\Labelparser\ZPL-Parser\bin\Debug\ZPLParser.pdb
+C:\Users\daniel\Projekte\Labelparser\bin\ZPL-Labelparser.dll
+C:\Users\daniel\Projekte\Labelparser\bin\ZPL-Labelparser.pdb
+C:\Users\daniel\Projekte\Labelparser\ZPL-Parser\obj\Debug\ZPL-Labelparser.dll
+C:\Users\daniel\Projekte\Labelparser\ZPL-Parser\obj\Debug\ZPL-Labelparser.pdb
