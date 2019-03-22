@@ -1,7 +1,0 @@
-C:\Users\daniel\Projekte\Labelparsers\ZPL-Parser\bin\Debug Webpage\Labelparser-ZPL.dll
-C:\Users\daniel\Projekte\Labelparsers\ZPL-Parser\bin\Debug Webpage\Labelparser-ZPL.pdb
-C:\Users\daniel\Projekte\Labelparsers\ZPL-Parser\obj\Debug Webpage\Labelparser-ZPL.dll
-C:\Users\daniel\Projekte\Labelparsers\ZPL-Parser\obj\Debug Webpage\Labelparser-ZPL.pdb
-C:\Users\daniel\Projekte\Labelparsers\ZPL-Parser\obj\Debug Webpage\Labelparser-ZPL.csprojResolveAssemblyReference.cache
-C:\Users\daniel\Projekte\Labelparsers\bin\Labelparser-ZPL.dll
-C:\Users\daniel\Projekte\Labelparsers\bin\Labelparser-ZPL.pdb

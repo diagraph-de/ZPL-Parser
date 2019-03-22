@@ -1,8 +1,0 @@
-C:\Users\daniel\Projekte\Labelparser\bin\Labelparser-ZPL.dll
-C:\Users\daniel\Projekte\Labelparser\bin\Labelparser-ZPL.pdb
-C:\Users\daniel\Projekte\Labelparser\ZPL-Parser\obj\Debug\Labelparser-ZPL.dll
-C:\Users\daniel\Projekte\Labelparser\ZPL-Parser\obj\Debug\Labelparser-ZPL.pdb
-C:\Users\daniel\Projekte\Labelparsers\bin\Labelparser-ZPL.dll
-C:\Users\daniel\Projekte\Labelparsers\bin\Labelparser-ZPL.pdb
-C:\Users\daniel\Projekte\Labelparsers\ZPL-Parser\obj\Debug\Labelparser-ZPL.dll
-C:\Users\daniel\Projekte\Labelparsers\ZPL-Parser\obj\Debug\Labelparser-ZPL.pdb
