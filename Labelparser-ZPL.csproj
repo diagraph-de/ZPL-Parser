@@ -110,6 +110,7 @@
     <Compile Include="Enums.cs" />
     <Compile Include="Barcode2D.cs" />
     <Compile Include="ImageHelper.cs" />
+    <Compile Include="DownloadGraphic.cs" />
     <Compile Include="PrintMode.cs" />
     <Compile Include="BarcodeFieldDefault.cs" />
     <Compile Include="PrintQuantity.cs" />
@@ -136,6 +137,7 @@
     <Compile Include="LabelException.cs" />
     <Compile Include="LabelHome.cs" />
     <Compile Include="BarcodeQR.cs" />
+    <Compile Include="RecallGraphic.cs" />
     <Compile Include="ZplParser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ZPLConstants.cs" />

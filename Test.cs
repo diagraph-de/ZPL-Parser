@@ -35,7 +35,7 @@ namespace ZPLParser
             //Add raw ZPL code
 
             var renderEngine = new ZPLEngine(labelElements);
-            var output = renderEngine.ToZPLString(new ZPLRenderOptions {AddEmptyLineBeforeElementStart = true});
+            var output = renderEngine.ToZPLString(new ZPLRenderOptions { AddEmptyLineBeforeElementStart = true });
 
             Console.WriteLine(output);
         }
@@ -43,9 +43,9 @@ namespace ZPLParser
         //[TestMethod]
         public void ChangeDPI()
         {
-            var labelElements = new List<BaseElement> {new GraphicBox(400, 700, 100, 100, 5)};
+            var labelElements = new List<BaseElement> { new GraphicBox(400, 700, 100, 100, 5) };
 
-            var options = new ZPLRenderOptions {SourcePrintDPI = 203, TargetPrintDPI = 300};
+            var options = new ZPLRenderOptions { SourcePrintDPI = 203, TargetPrintDPI = 300 };
             var output = new ZPLEngine(labelElements).ToZPLString(options);
 
             Console.WriteLine(output);
@@ -61,7 +61,7 @@ namespace ZPLParser
             labelElements.Add(textField);
 
             var renderEngine = new ZPLEngine(labelElements);
-            var output = renderEngine.ToZPLString(new ZPLRenderOptions {DisplayComments = true});
+            var output = renderEngine.ToZPLString(new ZPLRenderOptions { DisplayComments = true });
 
             Console.WriteLine(output);
         }
@@ -87,7 +87,7 @@ namespace ZPLParser
             // Multi - line text within a box region
 
             var renderEngine = new ZPLEngine(labelElements);
-            var output = renderEngine.ToZPLString(new ZPLRenderOptions {AddEmptyLineBeforeElementStart = true});
+            var output = renderEngine.ToZPLString(new ZPLRenderOptions { AddEmptyLineBeforeElementStart = true });
 
             Console.WriteLine(output);
         }
@@ -97,12 +97,12 @@ namespace ZPLParser
         {
             var labelElements = new List<BaseElement>
                                 {
-                                    new BaseDownloadGraphics('R', "SAMPLE", "GRC", new Bitmap("Sample.bmp")),
-                                    new RecallGraphic(100, 100, 'R', "SAMPLE", "GRC")
+                                    new BaseDownloadGraphics('R', "SAMPLE", ".GRC", new Bitmap("Sample.bmp")),
+                                    new RecallGraphic(100, 100, 'R', "SAMPLE", ".GRC")
                                 };
 
             var renderEngine = new ZPLEngine(labelElements);
-            var output = renderEngine.ToZPLString(new ZPLRenderOptions {AddEmptyLineBeforeElementStart = true, TargetPrintDPI = 600, SourcePrintDPI = 200});
+            var output = renderEngine.ToZPLString(new ZPLRenderOptions { AddEmptyLineBeforeElementStart = true, TargetPrintDPI = 600, SourcePrintDPI = 200 });
 
             Console.WriteLine(output);
         }

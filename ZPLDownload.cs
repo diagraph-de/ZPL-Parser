@@ -77,36 +77,4 @@ namespace ZPLParser
         }
     }
 
-    /// <summary>
-    ///     ^XGd:o.x,mx,my
-    /// </summary>
-    public class RecallGraphic : PositionedElement
-    {
-        public RecallGraphic(int positionX, int positionY, char storageDevice, string imageName, string extension, int magnificationFactorX = 1,
-            int magnificationFactorY = 1)
-            : base(positionX, positionY)
-        {
-            StorageDevice = storageDevice;
-            ImageName = imageName;
-            Extension = extension;
-            MagnificationFactorX = magnificationFactorX;
-            MagnificationFactorY = magnificationFactorY;
-        }
-
-        public char StorageDevice { get; set; }
-        public string ImageName { get; set; }
-        public string Extension { get; set; }
-        public int MagnificationFactorX { get; set; }
-        public int MagnificationFactorY { get; set; }
-
-        public override IEnumerable<string> Render(ZPLRenderOptions context)
-        {
-            var result = new List<string>();
-            if (Origin != null)
-                result.AddRange(Origin.Render(context));
-            result.Add(string.Format("^XG{0}:{1}.{2},{3},{4},", StorageDevice, ImageName, Extension, MagnificationFactorX, MagnificationFactorY));
-
-            return result;
-        }
-    }
 }

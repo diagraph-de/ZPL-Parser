@@ -79,9 +79,9 @@ namespace ZPLParser
                     {
                         ret.Add(e);
                     }
-                    
+
                 }
-                return ret;              
+                return ret;
             }
         }
 
@@ -93,7 +93,7 @@ namespace ZPLParser
                 foreach (var item in Elements)
                 {
                     var e = item as PositionedElement;
-                    if (e!=null)
+                    if (e != null)
                     {
                         ret.Add(e);
                     }
@@ -124,7 +124,7 @@ namespace ZPLParser
                 ParseLabelElements(0);
             }
         }
-         
+
         /// <summary>
         ///     This method parse all elements of a label.
         /// </summary>
@@ -436,10 +436,11 @@ namespace ZPLParser
                                 //  ~DB
                                 break;
                             case "~DG":
-                                //  ~DG
+                                //  ~DG Download Graphic
+                                AddElement(new DownloadGraphic(properties, elementBytes), true);
                                 break;
                             case "~DN":
-                                //  ~DN
+                                //  ~DN Abort Download Graphic
                                 break;
                             case "~DS":
                                 //  ~DS
@@ -471,7 +472,7 @@ namespace ZPLParser
                         {
                             case "^FB":
                                 //  ^FB                                
-                                AddElement(new FieldBlock(properties, elementBytes),true);
+                                AddElement(new FieldBlock(properties, elementBytes), true);
                                 break;
                             case "^FC":
                                 //  ^FC FieldClock
@@ -482,7 +483,7 @@ namespace ZPLParser
                                 var fd = new FieldData(_parentElement, properties, elementBytes);
                                 AddElement(fd, true);
 
-                                if (ScalableBitmappedFont.Current==null) 
+                                if (ScalableBitmappedFont.Current == null)
                                     ScalableBitmappedFont.Current = new ScalableBitmappedFont();
 
                                 var font = new ScalableBitmappedFont();
@@ -490,7 +491,7 @@ namespace ZPLParser
                                 font.FontHeight = ScalableBitmappedFont.Current.FontHeight;
                                 font.FontWidth = ScalableBitmappedFont.Current.FontWidth;
 
-                                var tf = new TextField(FieldOrigin.Current.PositionX, FieldOrigin.Current.PositionY,fd.Data, font, NewLineConversionMethod.ToSpace, false, FieldReversePrint.Current!=null);
+                                var tf = new TextField(FieldOrigin.Current.PositionX, FieldOrigin.Current.PositionY, fd.Data, font, NewLineConversionMethod.ToSpace, false, FieldReversePrint.Current != null);
                                 AddElement(tf, true);
                                 break;
                             case "^FH":
@@ -525,11 +526,11 @@ namespace ZPLParser
                                     if (item.FieldElements == null)
                                     {
                                         item.FieldElements = new List<FieldElement>();
-                                        foreach (var item2 in _fieldelements) 
-                                            item.FieldElements.Add(item2); 
+                                        foreach (var item2 in _fieldelements)
+                                            item.FieldElements.Add(item2);
                                     }
 
-                                } 
+                                }
                                 _fieldelements.Clear();
                                 break;
                             case "^FT":
@@ -571,7 +572,7 @@ namespace ZPLParser
                                 break;
                             case "^GF":
                                 //  ^GF 
-                                AddElement(new GraphicField(properties, elementBytes)); 
+                                AddElement(new GraphicField(properties, elementBytes));
                                 break;
                             case "^GS":
                                 //  ^GS
@@ -953,6 +954,7 @@ namespace ZPLParser
                                 break;
                             case "^XG":
                                 //  ^XG
+                                AddElement(new RecallGraphic(properties, elementBytes));
                                 break;
                             case "^XZ":
                                 AddElement(new EndFormat(properties, elementBytes));
@@ -978,10 +980,10 @@ namespace ZPLParser
             return length;
         }
 
-        private void AddElement(BaseElement element, bool fieldElement=false)
+        private void AddElement(BaseElement element, bool fieldElement = false)
         {
             try
-            { 
+            {
                 Elements.Add(element);
 
                 if (_parentElement != null && _parentElement.HasChild)
@@ -996,7 +998,7 @@ namespace ZPLParser
                     _parentElement = null;
 
                 if (fieldElement)
-                    _fieldelements.Add((FieldElement)element);  
+                    _fieldelements.Add((FieldElement)element);
             }
             catch (Exception ex)
             {
@@ -1004,14 +1006,18 @@ namespace ZPLParser
         }
 
         public FieldElement GetElement(List<FieldElement> fieldElements, Type type)
-        { 
-            foreach (var item in fieldElements)
+        {
+            if (fieldElements != null)
             {
-                if (item.GetType() == type)
+                foreach (var item in fieldElements)
                 {
-                    return item;
+                    if (item.GetType() == type)
+                    {
+                        return item;
+                    }
                 }
             }
+
             return null;
         }
 

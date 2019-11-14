@@ -1,6 +1,6 @@
 using System;
-using System.Drawing;  
 using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 
 namespace ZPLParser
@@ -48,24 +48,24 @@ namespace ZPLParser
                 bool compressed = false;
                 int i = 0;
                 var sb = new StringBuilder();
-                
+
                 foreach (var s in sp)
                 {
-                    if (i>3)
+                    if (i > 3)
                     {
                         if (s.Trim() == "")
                         {
                             compressed = true;
                             sb.Append(",");
                         }
-                        else 
-                            sb.Append(s); 
-                    } 
+                        else
+                            sb.Append(s);
+                    }
                     i++;
                 }
 
                 Data = sb.ToString().Trim();
-                Bitmap=CreateBitmap(compressed);
+                Bitmap = CreateBitmap(compressed);
             }
         }
 
@@ -80,25 +80,25 @@ namespace ZPLParser
             Bitmap = CreateBitmap();
         }
 
-        private Bitmap CreateBitmap(bool compressed=false)
+        private Bitmap CreateBitmap(bool compressed = false)
         {
-            var bmp = new Bitmap(1, 1); 
+            var bmp = new Bitmap(1, 1);
 
             switch (CompressionType)
             {
                 case Enums.CompressionType.A:
-                    var image= new ZPLImageConverter.ZPLImage();
-                    image.TotalBytes = BinaryByteCount;
-                    image.WidthBytes = BytesPerRow;
-                    image.bytes = System.Text.Encoding.ASCII.GetBytes(Data);
-                    if(Data!="")
-                        bmp = (Bitmap)new ZPLImageConverter().ZPLToBitmap(image, compressed); 
+                    var strucZPL = new ImageHelper.strucZPL();
+                    strucZPL.TotalBytes = BinaryByteCount;
+                    strucZPL.WidthBytes = BytesPerRow;
+                    strucZPL.bytes = Encoding.ASCII.GetBytes(Data);
+                    if (Data != "")
+                        bmp = (Bitmap)new ImageHelper().ZPLToBitmap(strucZPL, compressed);
                     break;
                 case Enums.CompressionType.B:
                     break;
                 case Enums.CompressionType.C:
-                    break; 
-            } 
+                    break;
+            }
             return bmp;
         }
 
@@ -122,11 +122,11 @@ namespace ZPLParser
             set
             {
                 _bitmap = value;
-                if (_bitmap!=null)
+                if (_bitmap != null)
                 {
                     if (CompressionType == Enums.CompressionType.A)
                     {
-                        var img = ZPLImageConverter.ZPLfromBitmap(_bitmap, false, false);
+                        var img = ImageHelper.ZPLfromBitmap(_bitmap, false, false);
                         Data = img.Result;
                         BytesPerRow = img.WidthBytes;
                         BinaryByteCount = img.TotalBytes;
@@ -134,13 +134,13 @@ namespace ZPLParser
                     }
                     else
                     {
-                        var img = ZPLImageConverter.ZPLfromBitmap(_bitmap, false, true);
+                        var img = ImageHelper.ZPLfromBitmap(_bitmap, false, true);
                         Data = img.Result;
                         BytesPerRow = img.WidthBytes;
                         BinaryByteCount = img.TotalBytes;
                         GraphicFieldCount = img.TotalBytes;
                     }
-                } 
+                }
                 //Data = GetBitmapData();
             }
         }
@@ -152,6 +152,6 @@ namespace ZPLParser
             result.Add("^GF" + CompressionType + "," + BinaryByteCount + "," + GraphicFieldCount + "," + BytesPerRow + "," + Data);
             return result;
         }
-         
+
     }
 }
