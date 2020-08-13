@@ -9,7 +9,12 @@ namespace ZPLParser
         private readonly string properties;
         private byte[] elementBytes;
 
-        public BarcodeQR(int positionX, int positionY, string content, int model = 2, int magnificationFactor = 2,
+        public BarcodeQR(
+            int positionX, 
+            int positionY, 
+            string content, 
+            int model = 2, 
+            int magnificationFactor = 2,
             Enums.ErrorCorrection errorCorrection = Enums.ErrorCorrection.Q,
             int maskValue = 7) : base(positionX, positionY)
         {
@@ -30,6 +35,10 @@ namespace ZPLParser
             Current = this;
 
             AddFieldData = false;
+
+            while (this.properties.Contains(",,"))
+                this.properties = this.properties.Replace(",,", ",0,");
+
             var sp = this.properties.Split(',');
             if (sp.Length > 0)
                 FieldPosition = sp[0];

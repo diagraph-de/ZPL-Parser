@@ -340,6 +340,7 @@ namespace ZPLParser
                                 break;
                             case "^BK":
                                 //  ^BK Barcode ANSI Codabar
+                                AddElement(new BarcodeAnsiCodabar(properties, elementBytes));
                                 break;
                             case "^BL":
                                 //  ^BL Barcode LOGMARS
@@ -367,6 +368,7 @@ namespace ZPLParser
                                 //  ^BU Barcode UPC-A
                                 break;
                             case "^BX":
+                                AddElement(new BarcodeDatamatrix(properties, elementBytes));
                                 //  ^BX Barcode DataMatrix
                                 break;
                             case "^BY":

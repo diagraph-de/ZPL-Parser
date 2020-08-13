@@ -16,7 +16,10 @@ namespace ZPLParser
 
             Current = this;
             FontName = fontName.Replace(Environment.NewLine, "");
-            ;
+     
+            while (this.properties.Contains(",,"))
+                this.properties = this.properties.Replace(",,", ",0,");
+
             var sp = this.properties.Split(',');
             switch (sp[0].ToUpper())
             {

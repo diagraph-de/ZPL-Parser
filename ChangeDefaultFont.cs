@@ -15,8 +15,12 @@ namespace ZPLParser
             this.elementBytes = elementBytes;
 
             Current = this;
+            
+            while (this.properties.Contains(",,"))
+                this.properties = this.properties.Replace(",,", ",0,");
 
             var sp = this.properties.Split(',');
+
             FontNr = sp[0];
             CharacterHeight = Convert.ToInt32(sp[1]);
             if (sp.Length > 2)

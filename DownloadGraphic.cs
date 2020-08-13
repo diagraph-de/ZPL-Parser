@@ -17,20 +17,23 @@ namespace ZPLParser
             this.elementBytes = elementBytes;
 
             Current = this;
-            var props = this.properties.Split(',');
+            while (this.properties.Contains(",,"))
+                this.properties = this.properties.Replace(",,", ",0,");
 
-            DestinationDevice = props[0].Split(':')[0] + ":";
-            ImageName = props[0].Split(':')[1].Split('.')[0];
-            FileNameExtension = "." + props[0].Split(':')[1].Split('.')[1];
-            TotalNumberOfBytes = Convert.ToInt16(props[1]);
-            NumberOfRows = Convert.ToInt16(props[2]);
-            Data = Encoding.ASCII.GetBytes(props[3]);
+            var sp = this.properties.Split(',');
+
+            DestinationDevice = sp[0].Split(':')[0] + ":";
+            ImageName = sp[0].Split(':')[1].Split('.')[0];
+            FileNameExtension = "." + sp[0].Split(':')[1].Split('.')[1];
+            TotalNumberOfBytes = Convert.ToInt16(sp[1]);
+            NumberOfRows = Convert.ToInt16(sp[2]);
+            Data = Encoding.ASCII.GetBytes(sp[3]);
 
             //try
             //{
             //    var bmp = new Bitmap(@"C:\Users\daniel\Desktop\label.bmp");
             //    var bmpString = new ImageHelper().BitmapToString(bmp, compressed);
-                 
+
             //    Image = new ImageHelper().BinaryToBitmap(Data, NumberOfRows * 8, TotalNumberOfBytes / NumberOfRows / 8, true);
             //    Image.Save(@"C:\Users\daniel\Desktop\zpl.bmp");
             //}

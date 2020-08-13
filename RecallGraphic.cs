@@ -23,13 +23,16 @@ namespace ZPLParser
             this.elementBytes = elementBytes;
 
             Current = this;
-            var props = this.properties.Split(',');
+            while (this.properties.Contains(",,"))
+                this.properties = this.properties.Replace(",,", ",0,");
 
-            StorageDevice = props[0].Split(':')[0] + ":";
-            ImageName = props[0].Split(':')[1].Split('.')[0];
-            Extension = "." + props[0].Split(':')[1].Split('.')[1];
-            MagnificationFactorX = Convert.ToInt16(props[1]);
-            MagnificationFactorY = Convert.ToInt16(props[2]);
+            var sp = this.properties.Split(',');
+
+            StorageDevice = sp[0].Split(':')[0] + ":";
+            ImageName = sp[0].Split(':')[1].Split('.')[0];
+            Extension = "." + sp[0].Split(':')[1].Split('.')[1];
+            MagnificationFactorX = Convert.ToInt16(sp[1]);
+            MagnificationFactorY = Convert.ToInt16(sp[2]);
         }
 
         public static RecallGraphic Current

@@ -17,7 +17,11 @@ namespace ZPLParser
 
             Current = this;
 
+            while (this.properties.Contains(",,"))
+                this.properties = this.properties.Replace(",,", ",0,");
+
             var sp = this.properties.Split(',');
+
             if (sp.Length > 0)
                 switch (sp[0].ToUpper())
                 {

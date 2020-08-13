@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 
@@ -56,55 +58,256 @@ namespace ZPLParser
             return hexAscii;
         }
 
-        /// <summary>
-        /// decode ASCII hexadecimal to Bitmap
-        /// </summary>
-        /// <param name="bitmapImage"></param>
-        /// <returns></returns>
-        private String BitmapToString(Bitmap bitmapImage)
+
+        public static string BitmapToString(Bitmap bmpSource)
         {
-            StringBuilder sb = new StringBuilder();
-            int height = bitmapImage.Height;
-            int width = bitmapImage.Width;
-            int rgb, red, green, blue, index = 0;
-            var auxBinaryChar = new char[] { '0', '0', '0', '0', '0', '0', '0', '0' };
-            widthBytes = width / 8;
-            if (width % 8 > 0)
+            if (bmpSource == null)
+                return "";
+
+            var dim = new Rectangle(Point.Empty, bmpSource.Size);
+            var stride = ((dim.Width + 7) / 8);
+            var bytes = stride * dim.Height;
+
+            using (var bmpCompressed = bmpSource.Clone(dim, PixelFormat.Format1bppIndexed))
             {
-                widthBytes = (width / 8) + 1;
-            }
-            else
-            {
-                widthBytes = width / 8;
-            }
-            total = widthBytes * height;
-            for (int h = 0; h < height; h++)
-            {
-                for (int w = 0; w < width; w++)
+                var result = new StringBuilder();
+                 
+                byte[][] imageData = GetImageData(dim, stride, bmpCompressed);
+
+                byte[] previousRow = null;
+                foreach (var row in imageData)
                 {
-                    rgb = bitmapImage.GetPixel(w, h).ToArgb();
-                    red = (rgb >> 16) & 0x000000FF;
-                    green = (rgb >> 8) & 0x000000FF;
-                    blue = (rgb) & 0x000000FF;
-                    char auxChar = '1';
-                    int totalColor = red + green + blue;
-                    if (totalColor > blackLimit)
+                    AppendLine(row, previousRow, result);
+                    previousRow = row;
+                } 
+
+                return result.ToString();
+            }
+        }
+
+        public static string GetGrfStoreCommand(Bitmap bmpSource, string fileName)
+        {
+            if (bmpSource == null)
+            {
+                throw new ArgumentNullException("bmpSource");
+            } 
+
+            var dim = new Rectangle(Point.Empty, bmpSource.Size);
+            var stride = ((dim.Width + 7) / 8);
+            var bytes = stride * dim.Height;
+
+            using (var bmpCompressed = bmpSource.Clone(dim, PixelFormat.Format1bppIndexed))
+            {
+                var result = new StringBuilder();
+
+                result.AppendFormat("^XA~DG{2},{0},{1},", stride * dim.Height, stride, fileName);
+                byte[][] imageData = GetImageData(dim, stride, bmpCompressed);
+
+                byte[] previousRow = null;
+                foreach (var row in imageData)
+                {
+                    AppendLine(row, previousRow, result);
+                    previousRow = row;
+                }
+                result.Append(@"^FS^XZ");
+
+                return result.ToString();
+            }
+        }
+
+        unsafe private static byte[][] GetImageData(Rectangle dim, int stride, Bitmap bmpCompressed)
+        {
+            byte[][] imageData;
+            var data = bmpCompressed.LockBits(dim, ImageLockMode.ReadOnly, PixelFormat.Format1bppIndexed);
+            try
+            {
+                byte* pixelData = (byte*)data.Scan0.ToPointer();
+                byte rightMask = (byte)(0xff << (data.Stride * 8 - dim.Width));
+                imageData = new byte[dim.Height][];
+
+                for (int row = 0; row < dim.Height; row++)
+                {
+                    byte* rowStart = pixelData + row * data.Stride;
+                    imageData[row] = new byte[stride];
+
+                    for (int col = 0; col < stride; col++)
                     {
-                        auxChar = '0';
-                    }
-                    auxBinaryChar[index] = auxChar;
-                    index++;
-                    if (index == 8 || w == (width - 1))
-                    {
-                        sb.Append(FourByteBinary(new String(auxBinaryChar)));
-                        auxBinaryChar = new char[] { '0', '0', '0', '0', '0', '0', '0', '0' };
-                        index = 0;
+                        byte f = (byte)(0xff ^ rowStart[col]);
+                        f = (col == stride - 1) ? (byte)(f & rightMask) : f;
+                        imageData[row][col] = f;
                     }
                 }
-                sb.Append("\n");
             }
-            return sb.ToString();
+            finally
+            {
+                bmpCompressed.UnlockBits(data);
+            }
+            return imageData;
         }
+
+        private static void AppendLine(byte[] row, byte[] previousRow, StringBuilder baseStream)
+        {
+            if (row.All(r => r == 0))
+            {
+                baseStream.Append(",");
+                return;
+            }
+
+            if (row.All(r => r == 0xff))
+            {
+                baseStream.Append("!");
+                return;
+            }
+
+            if (previousRow != null && MatchByteArray(row, previousRow))
+            {
+                baseStream.Append(":");
+                return;
+            }
+
+            byte[] nibbles = new byte[row.Length * 2];
+            for (int i = 0; i < row.Length; i++)
+            {
+                nibbles[i * 2] = (byte)(row[i] >> 4);
+                nibbles[i * 2 + 1] = (byte)(row[i] & 0x0f);
+            }
+
+            for (int i = 0; i < nibbles.Length; i++)
+            {
+                byte cPixel = nibbles[i];
+
+                int repeatCount = 0;
+                for (int j = i; j < nibbles.Length && repeatCount <= 400; j++)
+                {
+                    if (cPixel == nibbles[j])
+                    {
+                        repeatCount++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                if (repeatCount > 2)
+                {
+                    if (repeatCount == nibbles.Length - i
+                        && (cPixel == 0 || cPixel == 0xf))
+                    {
+                        if (cPixel == 0)
+                        {
+                            if (i % 2 == 1)
+                            {
+                                baseStream.Append("0");
+                            }
+                            baseStream.Append(",");
+                            return;
+                        }
+                        else if (cPixel == 0xf)
+                        {
+                            if (i % 2 == 1)
+                            {
+                                baseStream.Append("F");
+                            }
+                            baseStream.Append("!");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        baseStream.Append(GetRepeatCode(repeatCount));
+                        i += repeatCount - 1;
+                    }
+                }
+                baseStream.Append(cPixel.ToString("X"));
+            }
+        }
+
+        private static string GetRepeatCode(int repeatCount)
+        {
+            if (repeatCount > 419)
+                throw new ArgumentOutOfRangeException();
+
+            int high = repeatCount / 20;
+            int low = repeatCount % 20;
+
+            const string lowString = " GHIJKLMNOPQRSTUVWXY";
+            const string highString = " ghijklmnopqrstuvwxyz";
+
+            string repeatStr = "";
+            if (high > 0)
+            {
+                repeatStr += highString[high];
+            }
+            if (low > 0)
+            {
+                repeatStr += lowString[low];
+            }
+
+            return repeatStr;
+        }
+
+        private static bool MatchByteArray(byte[] row, byte[] previousRow)
+        {
+            for (int i = 0; i < row.Length; i++)
+            {
+                if (row[i] != previousRow[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        ///// <summary>
+        ///// decode ASCII hexadecimal to Bitmap
+        ///// </summary>
+        ///// <param name="bitmapImage"></param>
+        ///// <returns></returns>
+        //private String BitmapToString(Bitmap bitmapImage)
+        //{
+        //    StringBuilder sb = new StringBuilder();
+        //    int height = bitmapImage.Height;
+        //    int width = bitmapImage.Width;
+        //    int rgb, red, green, blue, index = 0;
+        //    var auxBinaryChar = new char[] { '0', '0', '0', '0', '0', '0', '0', '0' };
+        //    widthBytes = width / 8;
+        //    if (width % 8 > 0)
+        //    {
+        //        widthBytes = (width / 8) + 1;
+        //    }
+        //    else
+        //    {
+        //        widthBytes = width / 8;
+        //    }
+        //    total = widthBytes * height;
+        //    for (int h = 0; h < height; h++)
+        //    {
+        //        for (int w = 0; w < width; w++)
+        //        {
+        //            rgb = bitmapImage.GetPixel(w, h).ToArgb();
+        //            red = (rgb >> 16) & 0x000000FF;
+        //            green = (rgb >> 8) & 0x000000FF;
+        //            blue = (rgb) & 0x000000FF;
+        //            char auxChar = '1';
+        //            int totalColor = red + green + blue;
+        //            if (totalColor > blackLimit)
+        //            {
+        //                auxChar = '0';
+        //            }
+        //            auxBinaryChar[index] = auxChar;
+        //            index++;
+        //            if (index == 8 || w == (width - 1))
+        //            {
+        //                sb.Append(FourByteBinary(new String(auxBinaryChar)));
+        //                auxBinaryChar = new char[] { '0', '0', '0', '0', '0', '0', '0', '0' };
+        //                index = 0;
+        //            }
+        //        }
+        //        sb.Append("\n");
+        //    }
+        //    return sb.ToString();
+        //}
 
         /// <summary>
         /// Converts binary into integer representation of two hex digits 
@@ -136,16 +339,42 @@ namespace ZPLParser
         private int blackLimit = 380;
         public int total;
         public int widthBytes;
-        private bool compressHex;
-        private bool compressBinary;
-
-        public Image ZPLToBitmap(strucZPL image, bool compressed)
+        private bool compressHex; 
+        public static byte[] DecompressZb64(string compressedString)
         {
-
-            Bitmap ret = new Bitmap(1, 1);
+            var b64 = Convert.FromBase64String(compressedString.Split(':')[0]).Skip(2).ToArray();
+            return Decompress(b64); 
+        } 
+        public static byte[] Decompress(byte[] data)
+        {
+            byte[] decompressedArray = null;
             try
             {
-                byte[] grfData = image.bytes;
+                using (MemoryStream decompressedStream = new MemoryStream())
+                {
+                    using (MemoryStream compressStream = new MemoryStream(data))
+                    {
+                        using (DeflateStream deflateStream = new DeflateStream(compressStream, CompressionMode.Decompress))
+                        {
+                            deflateStream.CopyTo(decompressedStream);
+                        }
+                    }
+                    decompressedArray = decompressedStream.ToArray();
+                }
+            }
+            catch (Exception ex)
+            {
+                // do something !
+            }
+
+            return decompressedArray;
+        }
+        public Image ZPLToBitmap(strucZPL image, bool compressed)
+        { 
+            Bitmap ret = new Bitmap(1, 1);
+            try
+            { 
+                byte[] grfData = image.bytes;  
                 int width = image.WidthBytes * 8;
                 int height = image.TotalBytes / image.WidthBytes;
 
@@ -153,8 +382,7 @@ namespace ZPLParser
             }
             catch (Exception ex)
             {
-            }
-
+            } 
             return ret;
         }
 
@@ -553,9 +781,9 @@ namespace ZPLParser
                 var decodedString = DecodeHexAscii(grfData, width, height);
                 grfData = Encoding.ASCII.GetBytes(decodedString);
                 var enc = EncodeHexAscii(Encoding.ASCII.GetString(grfData));
+                //remove '\n'
             }
 
-            //remove '\n'
             grfData = RemoveLineBreak(grfData);
 
             int currentBit = 0;

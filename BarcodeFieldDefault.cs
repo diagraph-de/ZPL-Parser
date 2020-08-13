@@ -15,7 +15,11 @@ namespace ZPLParser
             this.elementBytes = elementBytes;
 
             Current = this;
+            while (this.properties.Contains(",,"))
+                this.properties = this.properties.Replace(",,", ",0,");
+
             var sp = this.properties.Split(',');
+
             ModuleWidth = Convert.ToInt32(sp[0]);
             Ratio = Convert.ToInt32(sp[1]);
             Height = Convert.ToInt32(sp[2]);

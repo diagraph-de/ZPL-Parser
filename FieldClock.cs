@@ -16,7 +16,12 @@ namespace ZPLParser
             this.elementBytes = elementBytes;
 
             Current = this;
+            
+            while (this.properties.Contains(",,"))
+                this.properties = this.properties.Replace(",,", ",0,");
+
             var sp = this.properties.Split(',');
+
             PrimaryClock = sp[0].ToCharArray()[0];
             if (sp.Length > 1)
                 SecondaryClock = sp[1].ToCharArray()[1];

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ZPLParser
@@ -18,6 +20,9 @@ namespace ZPLParser
             this.elementBytes = elementBytes;
 
             Current = this;
+
+            //while (this.properties.Contains(",,"))
+            //    this.properties = this.properties.Replace(",,", ",0,");
 
             var sp = this.properties.Split(',');
             if (sp.Length > 0)
@@ -92,7 +97,27 @@ namespace ZPLParser
                     strucZPL.WidthBytes = BytesPerRow;
                     strucZPL.bytes = Encoding.ASCII.GetBytes(Data);
                     if (Data != "")
+                    {
+                        try
+                        {
+                            if (Data.StartsWith(":Z64"))
+                            {
+                                var imageData = ImageHelper.DecompressZb64(Data.Substring(5));
+                         
+                                int width = BytesPerRow * 8;
+                                int height = imageData.Length / BytesPerRow;
+                                strucZPL.TotalBytes = imageData.Length;
+
+                                var bmp1= ArrayToBitmap(imageData, width, height, PixelFormat.Format1bppIndexed);
+                                return bmp1;
+                            }
+                        }
+                        catch (Exception ex)
+                        { 
+                        }
+
                         bmp = (Bitmap)new ImageHelper().ZPLToBitmap(strucZPL, compressed);
+                    }
                     break;
                 case Enums.CompressionType.B:
                     break;
@@ -101,7 +126,21 @@ namespace ZPLParser
             }
             return bmp;
         }
-
+        public static Bitmap ArrayToBitmap(byte[] bytes, int width, int height, PixelFormat pixelFormat)
+        {
+            var image = new Bitmap(width, height, pixelFormat);
+            var imageData = image.LockBits(new Rectangle(0, 0, image.Width, image.Height),
+                              ImageLockMode.ReadWrite, pixelFormat);
+            try
+            {
+                Marshal.Copy(bytes, 0, imageData.Scan0, bytes.Length);
+            }
+            finally
+            {
+                image.UnlockBits(imageData);
+            }
+            return image;
+        }
         public static GraphicField Current
         {
             get { return _current ?? (_current = new GraphicField(Enums.CompressionType.A, 0, 0, 0, "")); }

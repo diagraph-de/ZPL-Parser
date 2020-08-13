@@ -15,6 +15,9 @@ namespace ZPLParser
             this.elementBytes = elementBytes;
 
             Current = this;
+            while (this.properties.Contains(",,"))
+                this.properties = this.properties.Replace(",,", ",0,");
+
             var sp = this.properties.Split(',');
             TotalQuantity = Convert.ToInt32(sp[0]);
             Pause = Convert.ToInt32(sp[1]);

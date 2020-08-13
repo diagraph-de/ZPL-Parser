@@ -27,6 +27,9 @@ namespace ZPLParser
             Current = this;
 
             AddFieldSeparator = false;
+            while (this.properties.Contains(",,"))
+                this.properties = this.properties.Replace(",,", ",0,");
+
             var sp = this.properties.Split(',');
 
             if (sp.Length > 0)
