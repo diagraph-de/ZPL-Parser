@@ -71,7 +71,7 @@ namespace ZPLParser
             using (var bmpCompressed = bmpSource.Clone(dim, PixelFormat.Format1bppIndexed))
             {
                 var result = new StringBuilder();
-                 
+
                 byte[][] imageData = GetImageData(dim, stride, bmpCompressed);
 
                 byte[] previousRow = null;
@@ -79,7 +79,7 @@ namespace ZPLParser
                 {
                     AppendLine(row, previousRow, result);
                     previousRow = row;
-                } 
+                }
 
                 return result.ToString();
             }
@@ -90,7 +90,7 @@ namespace ZPLParser
             if (bmpSource == null)
             {
                 throw new ArgumentNullException("bmpSource");
-            } 
+            }
 
             var dim = new Rectangle(Point.Empty, bmpSource.Size);
             var stride = ((dim.Width + 7) / 8);
@@ -339,12 +339,12 @@ namespace ZPLParser
         private int blackLimit = 380;
         public int total;
         public int widthBytes;
-        private bool compressHex; 
+        private bool compressHex;
         public static byte[] DecompressZb64(string compressedString)
         {
             var b64 = Convert.FromBase64String(compressedString.Split(':')[0]).Skip(2).ToArray();
-            return Decompress(b64); 
-        } 
+            return Decompress(b64);
+        }
         public static byte[] Decompress(byte[] data)
         {
             byte[] decompressedArray = null;
@@ -370,11 +370,11 @@ namespace ZPLParser
             return decompressedArray;
         }
         public Image ZPLToBitmap(strucZPL image, bool compressed)
-        { 
+        {
             Bitmap ret = new Bitmap(1, 1);
             try
-            { 
-                byte[] grfData = image.bytes;  
+            {
+                byte[] grfData = image.bytes;
                 int width = image.WidthBytes * 8;
                 int height = image.TotalBytes / image.WidthBytes;
 
@@ -382,7 +382,7 @@ namespace ZPLParser
             }
             catch (Exception ex)
             {
-            } 
+            }
             return ret;
         }
 

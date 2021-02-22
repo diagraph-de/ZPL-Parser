@@ -16,7 +16,7 @@ namespace ZPLParser
             this.elementBytes = elementBytes;
 
             Current = this;
-            
+
             while (this.properties.Contains(",,"))
                 this.properties = this.properties.Replace(",,", ",0,");
 

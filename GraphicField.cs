@@ -103,17 +103,17 @@ namespace ZPLParser
                             if (Data.StartsWith(":Z64"))
                             {
                                 var imageData = ImageHelper.DecompressZb64(Data.Substring(5));
-                         
+
                                 int width = BytesPerRow * 8;
                                 int height = imageData.Length / BytesPerRow;
                                 strucZPL.TotalBytes = imageData.Length;
 
-                                var bmp1= ArrayToBitmap(imageData, width, height, PixelFormat.Format1bppIndexed);
+                                var bmp1 = ArrayToBitmap(imageData, width, height, PixelFormat.Format1bppIndexed);
                                 return bmp1;
                             }
                         }
                         catch (Exception ex)
-                        { 
+                        {
                         }
 
                         bmp = (Bitmap)new ImageHelper().ZPLToBitmap(strucZPL, compressed);

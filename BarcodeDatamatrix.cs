@@ -10,16 +10,16 @@ namespace ZPLParser
         private byte[] elementBytes;
 
         public BarcodeDatamatrix(
-            int positionX, 
-            int positionY, 
-            string content, 
-            string orientation = "N", 
+            int positionX,
+            int positionY,
+            string content,
+            string orientation = "N",
             int height = 2,
             int quality = 0,
             int cols = 0,
-            int rows = 0, 
-            int formatID=6, 
-            char controlChar='_') : base(positionX, positionY)
+            int rows = 0,
+            int formatID = 6,
+            char controlChar = '_') : base(positionX, positionY)
         {
             Base = typeof(Barcode2D);
             Content = content;
@@ -49,7 +49,7 @@ namespace ZPLParser
                 //N,33,200,0,0,1,_,1
                 var sp = this.properties.Split(',');
                 if (sp.Length > 0)
-                    Orientation = sp[0]; 
+                    Orientation = sp[0];
                 if (sp.Length > 1)
                     DMHeight = Convert.ToInt32(sp[1]);
                 if (sp.Length > 2)
@@ -64,9 +64,9 @@ namespace ZPLParser
                     ControlChar = sp[6].ToCharArray()[0];
             }
             catch (Exception ex)
-            { 
+            {
             }
-            
+
         }
 
         public static BarcodeDatamatrix Current
@@ -75,8 +75,8 @@ namespace ZPLParser
             set { _current = value; }
         }
 
-        public string Orientation { get; set; } = "N"; 
-        public int DMHeight { get; set; }   
+        public string Orientation { get; set; } = "N";
+        public int DMHeight { get; set; }
         public int Quality { get; set; } //0,50,80,100,150,200
         public int Cols { get; set; } //9-49
         public int Rows { get; set; } //9-94
@@ -85,11 +85,11 @@ namespace ZPLParser
         public string Content { get; protected set; }
 
         public override IEnumerable<string> Render(ZPLRenderOptions context)
-        { 
+        {
             var result = new List<string>();
             if (Origin != null)
                 result.AddRange(Origin.Render(context));
-            result.Add("^BX" +  Orientation + "," + context.Scale(DMHeight) + "," + Quality + "," + Cols + "," + Rows + "," + FormatID + "," + ControlChar);
+            result.Add("^BX" + Orientation + "," + context.Scale(DMHeight) + "," + Quality + "," + Cols + "," + Rows + "," + FormatID + "," + ControlChar);
             if (AddFieldData)
                 result.Add("^FD" + Quality + "M," + Content + "^FS");
 

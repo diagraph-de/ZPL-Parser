@@ -34,11 +34,11 @@ namespace ZPLParser
             Current = this;
 
             RenderProperties = true;
-            AddFieldData = false; 
-            
+            AddFieldData = false;
+
             while (this.properties.Contains(",,"))
                 this.properties = this.properties.Replace(",,", ",0,");
-            
+
             var sp = this.properties.Split(',');
             switch (sp[0].ToUpper())
             {

@@ -29,7 +29,7 @@ namespace ZPLParser
             this.properties = properties.Replace(Environment.NewLine, "");
             this.elementBytes = elementBytes;
 
-            Current = this; 
+            Current = this;
             while (this.properties.Contains(",,"))
                 this.properties = this.properties.Replace(",,", ",0,");
 

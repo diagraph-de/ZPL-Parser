@@ -16,7 +16,7 @@ namespace ZPLParser
 
             Current = this;
             FontName = fontName.Replace(Environment.NewLine, "");
-     
+
             while (this.properties.Contains(",,"))
                 this.properties = this.properties.Replace(",,", ",0,");
 

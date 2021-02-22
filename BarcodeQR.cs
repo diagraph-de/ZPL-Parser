@@ -10,10 +10,10 @@ namespace ZPLParser
         private byte[] elementBytes;
 
         public BarcodeQR(
-            int positionX, 
-            int positionY, 
-            string content, 
-            int model = 2, 
+            int positionX,
+            int positionY,
+            string content,
+            int model = 2,
             int magnificationFactor = 2,
             Enums.ErrorCorrection errorCorrection = Enums.ErrorCorrection.Q,
             int maskValue = 7) : base(positionX, positionY)

@@ -37,7 +37,7 @@ namespace ZPLParser
             while (this.properties.Contains(",,"))
                 this.properties = this.properties.Replace(",,", ",0,");
 
-            var sp = this.properties.Split(','); 
+            var sp = this.properties.Split(',');
 
             if (sp.Length > 0)
                 Width = Convert.ToInt32(sp[0]);
