@@ -5,7 +5,8 @@ namespace ZPLParser
     public class TextBlock : TextField
     {
         public TextBlock(int positionX, int positionY, string text, int width, int height, ScalableBitmappedFont font,
-            NewLineConversionMethod newLineConversion = NewLineConversionMethod.ToSpace, bool useHexadecimalIndicator = true)
+            NewLineConversionMethod newLineConversion = NewLineConversionMethod.ToSpace,
+            bool useHexadecimalIndicator = true)
             : base(positionX, positionY, text, font, newLineConversion, useHexadecimalIndicator)
         {
             Width = width;
@@ -26,6 +27,7 @@ namespace ZPLParser
                     result.AddRange(Origin.Render(context));
                 result.Add("^TB" + Font.Orientation + "," + context.Scale(Width) + "," + context.Scale(Height));
             }
+
             result.Add(RenderFieldDataSection());
 
             return result;

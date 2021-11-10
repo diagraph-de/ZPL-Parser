@@ -27,8 +27,8 @@ namespace ZPLParser
 
         public static FieldNumber Current
         {
-            get { return _currentPosition ?? (_currentPosition = new FieldNumber()); }
-            set { _currentPosition = value; }
+            get => _currentPosition ?? (_currentPosition = new FieldNumber());
+            set => _currentPosition = value;
         }
 
         public int Number { get; protected set; }

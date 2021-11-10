@@ -50,8 +50,8 @@ namespace ZPLParser
 
         public static BarcodeQR Current
         {
-            get { return _current ?? (_current = new BarcodeQR(0, 0, "")); }
-            set { _current = value; }
+            get => _current ?? (_current = new BarcodeQR(0, 0, ""));
+            set => _current = value;
         }
 
         public string FieldPosition { get; set; } = "N";
@@ -69,7 +69,8 @@ namespace ZPLParser
             var result = new List<string>();
             if (Origin != null)
                 result.AddRange(Origin.Render(context));
-            result.Add("^BQ" + FieldPosition + "," + Model + "," + context.Scale(MagnificationFactor) + "," + ErrorCorrection + "," + MaskValue);
+            result.Add("^BQ" + FieldPosition + "," + Model + "," + context.Scale(MagnificationFactor) + "," +
+                       ErrorCorrection + "," + MaskValue);
             if (AddFieldData)
                 result.Add("^FD" + ErrorCorrection + "M," + Content + "^FS");
 

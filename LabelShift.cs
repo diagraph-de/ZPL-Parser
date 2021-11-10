@@ -24,8 +24,8 @@ namespace ZPLParser
 
         public static LabelShfit Current
         {
-            get { return _current ?? (_current = new LabelShfit(0)); }
-            set { _current = value; }
+            get => _current ?? (_current = new LabelShfit(0));
+            set => _current = value;
         }
 
         public int ShiftLeft { get; protected set; }

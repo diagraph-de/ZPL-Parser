@@ -25,8 +25,8 @@ namespace ZPLParser
 
         public static LabelLength Current
         {
-            get { return _current ?? (_current = new LabelLength(0)); }
-            set { _current = value; }
+            get => _current ?? (_current = new LabelLength(0));
+            set => _current = value;
         }
 
         public int Length { get; protected set; }

@@ -10,9 +10,10 @@ namespace ZPLParser
 
         private byte[] elementBytes;
 
-        public GraphicCircle(int positionX, int positionY, int diameter, int borderThickness = 1, Enums.BlackWhite lineColor = Enums.BlackWhite.B) :
+        public GraphicCircle(int positionX, int positionY, int diameter, int borderThickness = 1,
+            Enums.BlackWhite lineColor = Enums.BlackWhite.B) :
             base(positionX, positionY,
-                 borderThickness, lineColor)
+                borderThickness, lineColor)
         {
             Base = typeof(GraphicElement);
             Diameter = diameter;
@@ -46,8 +47,8 @@ namespace ZPLParser
 
         public static GraphicCircle Current
         {
-            get { return _current ?? (_current = new GraphicCircle(0, 0, 0)); }
-            set { _current = value; }
+            get => _current ?? (_current = new GraphicCircle(0, 0, 0));
+            set => _current = value;
         }
 
         public int Diameter { get; }

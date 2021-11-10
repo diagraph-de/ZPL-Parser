@@ -27,13 +27,11 @@ namespace ZPLParser
 
         public static FieldVariable Current
         {
-            get
-            {
-                return _currentPosition != null
+            get =>
+                _currentPosition != null
                     ? _currentPosition
-                    : (_currentPosition = new FieldVariable(""));
-            }
-            set { _currentPosition = value; }
+                    : _currentPosition = new FieldVariable("");
+            set => _currentPosition = value;
         }
 
         public string VariableField { get; protected set; }

@@ -11,6 +11,8 @@ namespace ZPLParser
     {
         private static GraphicField _current;
         private readonly string properties;
+
+        private Bitmap _bitmap;
         private byte[] elementBytes;
 
         public GraphicField(string properties, byte[] elementBytes)
@@ -50,8 +52,8 @@ namespace ZPLParser
 
             if (sp.Length > 4)
             {
-                bool compressed = false;
-                int i = 0;
+                var compressed = false;
+                var i = 0;
                 var sb = new StringBuilder();
 
                 foreach (var s in sp)
@@ -64,8 +66,11 @@ namespace ZPLParser
                             sb.Append(",");
                         }
                         else
+                        {
                             sb.Append(s);
+                        }
                     }
+
                     i++;
                 }
 
@@ -74,7 +79,8 @@ namespace ZPLParser
             }
         }
 
-        public GraphicField(Enums.CompressionType compressionType, int binaryByteCount, int graphicFieldCount, int bytesPerRow, string data)
+        public GraphicField(Enums.CompressionType compressionType, int binaryByteCount, int graphicFieldCount,
+            int bytesPerRow, string data)
         {
             Base = typeof(GraphicElement);
             CompressionType = compressionType;
@@ -83,6 +89,47 @@ namespace ZPLParser
             BytesPerRow = bytesPerRow;
             Data = data;
             Bitmap = CreateBitmap();
+        }
+
+        public static GraphicField Current
+        {
+            get => _current ?? (_current = new GraphicField(Enums.CompressionType.A, 0, 0, 0, ""));
+            set => _current = value;
+        }
+
+        public Enums.CompressionType CompressionType { get; } = Enums.CompressionType.A;
+        public int BinaryByteCount { get; private set; }
+        public int GraphicFieldCount { get; private set; }
+        public int BytesPerRow { get; private set; }
+        public string Data { get; private set; }
+
+        public Bitmap Bitmap
+        {
+            get => _bitmap;
+            set
+            {
+                _bitmap = value;
+                if (_bitmap != null)
+                {
+                    if (CompressionType == Enums.CompressionType.A)
+                    {
+                        var img = ImageHelper.ZPLfromBitmap(_bitmap, false);
+                        Data = img.Result;
+                        BytesPerRow = img.WidthBytes;
+                        BinaryByteCount = img.TotalBytes;
+                        GraphicFieldCount = img.TotalBytes;
+                    }
+                    else
+                    {
+                        var img = ImageHelper.ZPLfromBitmap(_bitmap, false, true);
+                        Data = img.Result;
+                        BytesPerRow = img.WidthBytes;
+                        BinaryByteCount = img.TotalBytes;
+                        GraphicFieldCount = img.TotalBytes;
+                    }
+                }
+                //Data = GetBitmapData();
+            }
         }
 
         private Bitmap CreateBitmap(bool compressed = false)
@@ -104,8 +151,8 @@ namespace ZPLParser
                             {
                                 var imageData = ImageHelper.DecompressZb64(Data.Substring(5));
 
-                                int width = BytesPerRow * 8;
-                                int height = imageData.Length / BytesPerRow;
+                                var width = BytesPerRow * 8;
+                                var height = imageData.Length / BytesPerRow;
                                 strucZPL.TotalBytes = imageData.Length;
 
                                 var bmp1 = ArrayToBitmap(imageData, width, height, PixelFormat.Format1bppIndexed);
@@ -118,19 +165,22 @@ namespace ZPLParser
 
                         bmp = (Bitmap)new ImageHelper().ZPLToBitmap(strucZPL, compressed);
                     }
+
                     break;
                 case Enums.CompressionType.B:
                     break;
                 case Enums.CompressionType.C:
                     break;
             }
+
             return bmp;
         }
+
         public static Bitmap ArrayToBitmap(byte[] bytes, int width, int height, PixelFormat pixelFormat)
         {
             var image = new Bitmap(width, height, pixelFormat);
             var imageData = image.LockBits(new Rectangle(0, 0, image.Width, image.Height),
-                              ImageLockMode.ReadWrite, pixelFormat);
+                ImageLockMode.ReadWrite, pixelFormat);
             try
             {
                 Marshal.Copy(bytes, 0, imageData.Scan0, bytes.Length);
@@ -139,58 +189,17 @@ namespace ZPLParser
             {
                 image.UnlockBits(imageData);
             }
+
             return image;
-        }
-        public static GraphicField Current
-        {
-            get { return _current ?? (_current = new GraphicField(Enums.CompressionType.A, 0, 0, 0, "")); }
-            set { _current = value; }
-        }
-
-        public Enums.CompressionType CompressionType { get; } = Enums.CompressionType.A;
-        public int BinaryByteCount { get; private set; }
-        public int GraphicFieldCount { get; private set; }
-        public int BytesPerRow { get; private set; }
-        public string Data { get; private set; }
-
-        private Bitmap _bitmap;
-
-        public Bitmap Bitmap
-        {
-            get { return _bitmap; }
-            set
-            {
-                _bitmap = value;
-                if (_bitmap != null)
-                {
-                    if (CompressionType == Enums.CompressionType.A)
-                    {
-                        var img = ImageHelper.ZPLfromBitmap(_bitmap, false, false);
-                        Data = img.Result;
-                        BytesPerRow = img.WidthBytes;
-                        BinaryByteCount = img.TotalBytes;
-                        GraphicFieldCount = img.TotalBytes;
-                    }
-                    else
-                    {
-                        var img = ImageHelper.ZPLfromBitmap(_bitmap, false, true);
-                        Data = img.Result;
-                        BytesPerRow = img.WidthBytes;
-                        BinaryByteCount = img.TotalBytes;
-                        GraphicFieldCount = img.TotalBytes;
-                    }
-                }
-                //Data = GetBitmapData();
-            }
         }
 
         public override IEnumerable<string> Render(ZPLRenderOptions context)
         {
             //^GSo,h,w
             var result = new List<string>();
-            result.Add("^GF" + CompressionType + "," + BinaryByteCount + "," + GraphicFieldCount + "," + BytesPerRow + "," + Data);
+            result.Add("^GF" + CompressionType + "," + BinaryByteCount + "," + GraphicFieldCount + "," + BytesPerRow +
+                       "," + Data);
             return result;
         }
-
     }
 }

@@ -39,8 +39,8 @@ namespace ZPLParser
 
         public static FieldClock Current
         {
-            get { return _currentPosition ?? (_currentPosition = new FieldClock('%', '{', '#')); }
-            set { _currentPosition = value; }
+            get => _currentPosition ?? (_currentPosition = new FieldClock('%', '{', '#'));
+            set => _currentPosition = value;
         }
 
         public int PrimaryClock { get; protected set; }

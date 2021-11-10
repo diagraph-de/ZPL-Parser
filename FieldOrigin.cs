@@ -30,8 +30,8 @@ namespace ZPLParser
 
         public static FieldOrigin Current
         {
-            get { return _currentPosition ?? (_currentPosition = new FieldOrigin(0, 0)); }
-            set { _currentPosition = value; }
+            get => _currentPosition ?? (_currentPosition = new FieldOrigin(0, 0));
+            set => _currentPosition = value;
         }
 
         public int PositionX { get; protected set; }

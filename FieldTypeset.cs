@@ -29,13 +29,11 @@ namespace ZPLParser
 
         public static FieldTypeset Current
         {
-            get
-            {
-                return _currentPosition != null
+            get =>
+                _currentPosition != null
                     ? _currentPosition
-                    : (_currentPosition = new FieldTypeset(0, 0));
-            }
-            set { _currentPosition = value; }
+                    : _currentPosition = new FieldTypeset(0, 0);
+            set => _currentPosition = value;
         }
 
         public int PositionX { get; protected set; }

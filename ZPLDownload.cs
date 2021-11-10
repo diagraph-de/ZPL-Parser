@@ -45,14 +45,17 @@ namespace ZPLParser
         {
             //Resize based on dpi
             var contextImage =
-                    new Bitmap(Image, new Size((int)Math.Round(Image.Width * context.ScaleFactor), (int)Math.Round(Image.Height * context.ScaleFactor)));
+                new Bitmap(Image,
+                    new Size((int)Math.Round(Image.Width * context.ScaleFactor),
+                        (int)Math.Round(Image.Height * context.ScaleFactor)));
 
             NumberOfBytesPerRow = (int)Math.Ceiling(contextImage.Width / 8.0); //Each pixel is 1 bit or (1/8) byte
             TotalNumberOfBytes = contextImage.Height * NumberOfBytesPerRow;
 
             List<string> result;
             result = new List<string>();
-            result.Add(string.Format("~DG{0}:{1}.{2},{3},{4},", StorageDevice, ImageName, Extension, TotalNumberOfBytes, NumberOfBytesPerRow));
+            result.Add(string.Format("~DG{0}:{1}.{2},{3},{4},", StorageDevice, ImageName, Extension, TotalNumberOfBytes,
+                NumberOfBytesPerRow));
 
             //Foreach row
             for (var row = 0; row < contextImage.Height; row++)
@@ -76,5 +79,4 @@ namespace ZPLParser
             return result;
         }
     }
-
 }

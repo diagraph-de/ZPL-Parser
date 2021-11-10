@@ -24,8 +24,8 @@ namespace ZPLParser
 
         public static PrintWidth Current
         {
-            get { return _current ?? (_current = new PrintWidth(0)); }
-            set { _current = value; }
+            get => _current ?? (_current = new PrintWidth(0));
+            set => _current = value;
         }
 
         public int Width { get; protected set; }

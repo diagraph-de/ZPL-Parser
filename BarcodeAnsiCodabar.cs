@@ -10,10 +10,13 @@ namespace ZPLParser
         private readonly string properties;
         private byte[] elementBytes;
 
-        public BarcodeAnsiCodabar(int positionX, int positionY, string content, int height, char startCharacter, char stopCharacter,
-            Enums.Orientation orientation = Enums.Orientation.N, bool printInterpretationLine = true, bool printInterpretationLineAboveCode = false,
+        public BarcodeAnsiCodabar(int positionX, int positionY, string content, int height, char startCharacter,
+            char stopCharacter,
+            Enums.Orientation orientation = Enums.Orientation.N, bool printInterpretationLine = true,
+            bool printInterpretationLineAboveCode = false,
             bool checkDigit = false)
-            : base(positionX, positionY, content, height, orientation, printInterpretationLine, printInterpretationLineAboveCode)
+            : base(positionX, positionY, content, height, orientation, printInterpretationLine,
+                printInterpretationLineAboveCode)
         {
             Base = typeof(Barcode1D);
             CheckDigit = checkDigit;
@@ -76,8 +79,8 @@ namespace ZPLParser
 
         public static BarcodeAnsiCodabar Current
         {
-            get { return _current ?? (_current = new BarcodeAnsiCodabar(0, 0, "", 1, 'A', 'A')); }
-            set { _current = value; }
+            get => _current ?? (_current = new BarcodeAnsiCodabar(0, 0, "", 1, 'A', 'A'));
+            set => _current = value;
         }
 
         public bool CheckDigit { get; }

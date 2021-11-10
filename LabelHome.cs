@@ -27,8 +27,8 @@ namespace ZPLParser
 
         public static LabelHome Current
         {
-            get { return _currentPosition ?? (_currentPosition = new LabelHome(0, 0)); }
-            set { _currentPosition = value; }
+            get => _currentPosition ?? (_currentPosition = new LabelHome(0, 0));
+            set => _currentPosition = value;
         }
 
         public int PositionX { get; protected set; }

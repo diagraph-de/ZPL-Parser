@@ -36,8 +36,8 @@ namespace ZPLParser
 
         public static ChangeDefaultFont Current
         {
-            get { return _current ?? (_current = new ChangeDefaultFont("Z", 9, 5)); }
-            set { _current = value; }
+            get => _current ?? (_current = new ChangeDefaultFont("Z", 9, 5));
+            set => _current = value;
         }
 
         public string FontNr { get; protected set; }

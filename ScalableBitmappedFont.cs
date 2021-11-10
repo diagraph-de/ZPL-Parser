@@ -36,11 +36,13 @@ namespace ZPLParser
                     Orientation = Enums.Orientation.B; //read from bottom up 270 degrees
                     break;
             }
+
             FontWidth = Convert.ToInt32(sp[1]);
             FontHeight = Convert.ToInt32(sp[2]);
         }
 
-        public ScalableBitmappedFont(int fontWidth = 30, int fontHeight = 30, string fontName = "0", Enums.Orientation orientation = Enums.Orientation.N)
+        public ScalableBitmappedFont(int fontWidth = 30, int fontHeight = 30, string fontName = "0",
+            Enums.Orientation orientation = Enums.Orientation.N)
         {
             FontName = fontName;
             Orientation = orientation;
@@ -50,8 +52,8 @@ namespace ZPLParser
 
         public static ScalableBitmappedFont Current
         {
-            get { return _currentFont ?? (_currentFont = new ScalableBitmappedFont()); }
-            set { _currentFont = value; }
+            get => _currentFont ?? (_currentFont = new ScalableBitmappedFont());
+            set => _currentFont = value;
         }
 
         public string FontName { get; set; }
@@ -66,7 +68,8 @@ namespace ZPLParser
                 textOrientation = context.DefaultTextOrientation;
 
             var result = new List<string>();
-            result.Add("^A" + FontName + textOrientation + "," + context.Scale(FontHeight) + "," + context.Scale(FontWidth));
+            result.Add("^A" + FontName + textOrientation + "," + context.Scale(FontHeight) + "," +
+                       context.Scale(FontWidth));
             return result;
         }
     }

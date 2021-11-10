@@ -36,10 +36,10 @@ namespace ZPLParser
         public List<string> Render(ZPLRenderOptions context)
         {
             var result = new List<string>
-                         {
-                             "^XA",
-                             context.ChangeInternationalFontEncoding
-                         };
+            {
+                "^XA",
+                context.ChangeInternationalFontEncoding
+            };
             foreach (var e in this.Where(x => x.IsEnabled))
             {
                 //Empty line
@@ -60,6 +60,7 @@ namespace ZPLParser
                 else
                     result.AddRange(e.Render(context));
             }
+
             result.Add("^XZ");
 
             return result;

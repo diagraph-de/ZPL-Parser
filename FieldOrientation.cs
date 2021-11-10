@@ -48,8 +48,8 @@ namespace ZPLParser
 
         public static FieldOrientation Current
         {
-            get { return _current ?? (_current = new FieldOrientation()); }
-            set { _current = value; }
+            get => _current ?? (_current = new FieldOrientation());
+            set => _current = value;
         }
 
         public Enums.Orientation Orientation { get; }

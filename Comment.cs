@@ -25,8 +25,8 @@ namespace ZPLParser
 
         public static Comment Current
         {
-            get { return _current ?? (_current = new Comment()); }
-            set { _current = value; }
+            get => _current ?? (_current = new Comment());
+            set => _current = value;
         }
 
         public string NonPrintingComment { get; protected set; }

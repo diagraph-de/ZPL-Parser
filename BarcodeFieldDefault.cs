@@ -34,8 +34,8 @@ namespace ZPLParser
 
         public static BarcodeFieldDefault Current
         {
-            get { return _current ?? (_current = new BarcodeFieldDefault(2, 0, 10)); }
-            set { _current = value; }
+            get => _current ?? (_current = new BarcodeFieldDefault(2, 0, 10));
+            set => _current = value;
         }
 
         public int ModuleWidth { get; protected set; }

@@ -14,7 +14,8 @@ namespace ZPLParser
             Enums.Orientation orientation = Enums.Orientation.N,
             bool printInterpretationLine = true,
             bool printInterpretationLineAboveCode = false)
-            : base(positionX, positionY, content, height, orientation, printInterpretationLine, printInterpretationLineAboveCode)
+            : base(positionX, positionY, content, height, orientation, printInterpretationLine,
+                printInterpretationLineAboveCode)
         {
             Base = typeof(Barcode1D);
         }
@@ -52,6 +53,7 @@ namespace ZPLParser
                     RenderProperties = false;
                     break;
             }
+
             if (sp.Length > 1)
                 Height = Convert.ToInt32(sp[1]);
             PrintInterpretationLine = sp.Length > 2 && sp[2].ToUpper() == Enums.YesNo.Y.ToString();
@@ -78,8 +80,8 @@ namespace ZPLParser
 
         public static BarcodeCode128 Current
         {
-            get { return _current ?? (_current = new BarcodeCode128(0, 0, "")); }
-            set { _current = value; }
+            get => _current ?? (_current = new BarcodeCode128(0, 0, ""));
+            set => _current = value;
         }
 
         public Enums.YesNo UCCCheckDigit { get; protected set; } = Enums.YesNo.N;
@@ -96,13 +98,13 @@ namespace ZPLParser
             result.Add("^BC");
             if (RenderProperties)
                 result.Add(Orientation + ","
-                           + context.Scale(Height) + ","
-                           + (PrintInterpretationLine
-                               ? "Y"
-                               : "N") + ","
-                           + (PrintInterpretationLineAboveCode
-                               ? "Y"
-                               : "N"));
+                                       + context.Scale(Height) + ","
+                                       + (PrintInterpretationLine
+                                           ? "Y"
+                                           : "N") + ","
+                                       + (PrintInterpretationLineAboveCode
+                                           ? "Y"
+                                           : "N"));
             if (AddFieldData)
                 result.Add("^FD" + Content + "^FS");
             return result;

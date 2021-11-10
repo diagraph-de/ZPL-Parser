@@ -8,8 +8,10 @@ namespace ZPLParser
         private readonly string properties;
         private byte[] elementBytes;
 
-        public GraphicDiagonalLine(int positionX, int positionY, int width, int height, int borderThickness = 1, bool rightLeaningiagonal = false,
-            Enums.BlackWhite lineColor = Enums.BlackWhite.B, int cornerRounding = 0) : base(positionX, positionY, width, height, borderThickness, lineColor, 0)
+        public GraphicDiagonalLine(int positionX, int positionY, int width, int height, int borderThickness = 1,
+            bool rightLeaningiagonal = false,
+            Enums.BlackWhite lineColor = Enums.BlackWhite.B, int cornerRounding = 0) : base(positionX, positionY, width,
+            height, borderThickness, lineColor)
         {
             Base = typeof(GraphicElement);
             RightLeaningiagonal = rightLeaningiagonal;
@@ -55,7 +57,8 @@ namespace ZPLParser
             var result = new List<string>();
             if (Origin != null)
                 result.AddRange(Origin.Render(context));
-            result.Add("^GD" + context.Scale(Width) + "," + context.Scale(Height) + "," + context.Scale(BorderThickness) + "," + LineColor + "," +
+            result.Add("^GD" + context.Scale(Width) + "," + context.Scale(Height) + "," +
+                       context.Scale(BorderThickness) + "," + LineColor + "," +
                        (RightLeaningiagonal
                            ? "R"
                            : "L"));

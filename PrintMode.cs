@@ -42,8 +42,8 @@ namespace ZPLParser
 
         public static PrintMode Current
         {
-            get { return _current ?? (_current = new PrintMode()); }
-            set { _current = value; }
+            get => _current ?? (_current = new PrintMode());
+            set => _current = value;
         }
 
         public Enums.PrintMode DesiredMode { get; protected set; }

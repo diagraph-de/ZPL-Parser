@@ -35,6 +35,8 @@ namespace ZPLParser
             Z
         }
 
+        private readonly List<FieldElement> _fieldelements = new List<FieldElement>();
+
         private byte[] _labelContentBytes;
 
         private BaseElement _parentElement;
@@ -75,12 +77,9 @@ namespace ZPLParser
                 foreach (var item in Elements)
                 {
                     var e = item as GraphicElement;
-                    if (e != null)
-                    {
-                        ret.Add(e);
-                    }
-
+                    if (e != null) ret.Add(e);
                 }
+
                 return ret;
             }
         }
@@ -93,17 +92,19 @@ namespace ZPLParser
                 foreach (var item in Elements)
                 {
                     var e = item as PositionedElement;
-                    if (e != null)
-                    {
-                        ret.Add(e);
-                    }
+                    if (e != null) ret.Add(e);
                 }
+
                 return ret;
             }
         }
+
         public List<FieldElement> FieldElements
         {
-            get { return Elements.Where(element => element.Base == typeof(FieldElement)).OfType<FieldElement>().ToList(); }
+            get
+            {
+                return Elements.Where(element => element.Base == typeof(FieldElement)).OfType<FieldElement>().ToList();
+            }
         }
 
         public Encoding ContentEncoding { get; set; }
@@ -111,7 +112,7 @@ namespace ZPLParser
 
         public byte[] LabelContentBytes
         {
-            get { return _labelContentBytes; }
+            get => _labelContentBytes;
             set
             {
                 _labelContentBytes = value;
@@ -120,6 +121,7 @@ namespace ZPLParser
                     Error = "empty label";
                     return;
                 }
+
                 Elements.Clear();
                 ParseLabelElements(0);
             }
@@ -141,9 +143,10 @@ namespace ZPLParser
                     // During the first run, labelElementsToParse contains the whole label elements as a string(starting from the second ';' to the end of the label).
                     // If an element is found, we increase i by the size of that element and look for the next element start code at i. 
                     var labelElementsToParse = ContentEncoding.GetString(LabelContentBytes, i + startByteIndex,
-                                                                         LabelContentBytes.Length - i - startByteIndex);
+                        LabelContentBytes.Length - i - startByteIndex);
 
-                    if (labelElementsToParse.Length >= 1 && (labelElementsToParse[0].Equals(Start1) || labelElementsToParse[0].Equals(Start2)))
+                    if (labelElementsToParse.Length >= 1 && (labelElementsToParse[0].Equals(Start1) ||
+                                                             labelElementsToParse[0].Equals(Start2)))
                     {
                         var elementCode = tryToGetElementCodeType(labelElementsToParse[1]);
                         if (elementCode != ElementCodeTypes.UNKNOWN)
@@ -260,6 +263,7 @@ namespace ZPLParser
                     elementBytes = Encoding.UTF8.GetBytes(value);
                     properties = value;
                 }
+
                 switch (elementCode)
                 {
                     case ElementCodeTypes.UNKNOWN:
@@ -284,6 +288,7 @@ namespace ZPLParser
                                 //  ^A@
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.B:
                         switch (tag)
@@ -379,6 +384,7 @@ namespace ZPLParser
                                 //  ^BZ Barcode POSTNET
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.C:
                         switch (tag)
@@ -426,6 +432,7 @@ namespace ZPLParser
                                 //  ~CT
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.D:
                         switch (tag)
@@ -457,6 +464,7 @@ namespace ZPLParser
                                 //  ~DY
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.E:
                         switch (tag)
@@ -468,6 +476,7 @@ namespace ZPLParser
                                 //  ~EG
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.F:
                         switch (tag)
@@ -493,7 +502,9 @@ namespace ZPLParser
                                 font.FontHeight = ScalableBitmappedFont.Current.FontHeight;
                                 font.FontWidth = ScalableBitmappedFont.Current.FontWidth;
 
-                                var tf = new TextField(FieldOrigin.Current.PositionX, FieldOrigin.Current.PositionY, fd.Data, font, NewLineConversionMethod.ToSpace, false, FieldReversePrint.Current != null);
+                                var tf = new TextField(FieldOrigin.Current.PositionX, FieldOrigin.Current.PositionY,
+                                    fd.Data, font, NewLineConversionMethod.ToSpace, false,
+                                    FieldReversePrint.Current != null);
                                 AddElement(tf, true);
                                 break;
                             case "^FH":
@@ -524,7 +535,6 @@ namespace ZPLParser
                                 AddElement(new FieldSeparator(_parentElement, properties, elementBytes), true);
 
                                 foreach (var item in PositionedElements)
-                                {
                                     if (item.FieldElements == null)
                                     {
                                         item.FieldElements = new List<FieldElement>();
@@ -532,7 +542,6 @@ namespace ZPLParser
                                             item.FieldElements.Add(item2);
                                     }
 
-                                }
                                 _fieldelements.Clear();
                                 break;
                             case "^FT":
@@ -552,6 +561,7 @@ namespace ZPLParser
                                 AddElement(new Comment(properties, elementBytes), true);
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.G:
                         switch (tag)
@@ -581,6 +591,7 @@ namespace ZPLParser
                                 AddElement(new GraphicSymbol(properties, elementBytes));
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.H:
                         switch (tag)
@@ -623,6 +634,7 @@ namespace ZPLParser
                                 //  ~HU
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.I:
                         switch (tag)
@@ -640,6 +652,7 @@ namespace ZPLParser
                                 //  ^IS
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.J:
                         switch (tag)
@@ -721,6 +734,7 @@ namespace ZPLParser
                                 //  ~JX
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.K:
                         switch (tag)
@@ -742,6 +756,7 @@ namespace ZPLParser
                                 //  ~KB
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.L:
                         switch (tag)
@@ -767,6 +782,7 @@ namespace ZPLParser
                                 AddElement(new LabelTop(properties, elementBytes));
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.M:
                         switch (tag)
@@ -803,6 +819,7 @@ namespace ZPLParser
                                 //  ^MW
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.N:
                         switch (tag)
@@ -823,6 +840,7 @@ namespace ZPLParser
                                 //  ~NT
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.P:
                         switch (tag)
@@ -863,6 +881,7 @@ namespace ZPLParser
                                 AddElement(new PrintWidth(properties, elementBytes));
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.R:
                         switch (tag)
@@ -871,6 +890,7 @@ namespace ZPLParser
                                 //  ~RO
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.S:
                         switch (tag)
@@ -918,6 +938,7 @@ namespace ZPLParser
                                 //  ^SZ
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.T:
                         switch (tag)
@@ -929,6 +950,7 @@ namespace ZPLParser
                                 //  ^TO
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.W:
                         switch (tag)
@@ -940,6 +962,7 @@ namespace ZPLParser
                                 //  ^WD
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.X:
                         switch (tag)
@@ -963,6 +986,7 @@ namespace ZPLParser
                                 //  ^XZ
                                 break;
                         }
+
                         break;
                     case ElementCodeTypes.Z:
                         switch (tag)
@@ -971,9 +995,7 @@ namespace ZPLParser
                                 //  ^ZZ
                                 break;
                         }
-                        break;
-                    default:
-                        // throw new ArgumentOutOfRangeException(nameof(elementCode), elementCode, null);
+
                         break;
                 }
             }
@@ -1010,20 +1032,12 @@ namespace ZPLParser
         public FieldElement GetElement(List<FieldElement> fieldElements, Type type)
         {
             if (fieldElements != null)
-            {
                 foreach (var item in fieldElements)
-                {
                     if (item.GetType() == type)
-                    {
                         return item;
-                    }
-                }
-            }
 
             return null;
         }
-
-        private List<FieldElement> _fieldelements = new List<FieldElement>();
 
         public string GetTree()
         {
@@ -1036,9 +1050,11 @@ namespace ZPLParser
                     sb.Append("|    ");
                     elem = elem.Parent;
                 }
+
                 var line = "|---" + element.ToString().Replace("ZPLParser.", "") + "  " + element.RenderToString();
                 sb.AppendLine(line);
             }
+
             return sb.ToString();
         }
 
@@ -1057,6 +1073,7 @@ namespace ZPLParser
                     ms.Write(bytes, 0, bytes.Length);
                 }
             }
+
             return ms.ToArray();
         }
 
@@ -1070,6 +1087,7 @@ namespace ZPLParser
                 ret += tab;
                 elem = elem.Child;
             }
+
             return ret;
         }
     }

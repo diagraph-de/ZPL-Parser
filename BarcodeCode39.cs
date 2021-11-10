@@ -9,10 +9,12 @@ namespace ZPLParser
         private readonly string properties;
         private byte[] elementBytes;
 
-        public BarcodeCode39(int positionX, int positionY, string content, int height = 100, Enums.Orientation orientation = Enums.Orientation.N,
+        public BarcodeCode39(int positionX, int positionY, string content, int height = 100,
+            Enums.Orientation orientation = Enums.Orientation.N,
             bool printInterpretationLine = true,
             bool printInterpretationLineAboveCode = false, bool mod43CheckDigit = false)
-            : base(positionX, positionY, content, height, orientation, printInterpretationLine, printInterpretationLineAboveCode)
+            : base(positionX, positionY, content, height, orientation, printInterpretationLine,
+                printInterpretationLineAboveCode)
         {
             Base = typeof(Barcode1D);
             Mod43CheckDigit = mod43CheckDigit;
@@ -63,8 +65,8 @@ namespace ZPLParser
 
         public static BarcodeCode39 Current
         {
-            get { return _current ?? (_current = new BarcodeCode39(0, 0, "")); }
-            set { _current = value; }
+            get => _current ?? (_current = new BarcodeCode39(0, 0, ""));
+            set => _current = value;
         }
 
         public bool Mod43CheckDigit { get; }

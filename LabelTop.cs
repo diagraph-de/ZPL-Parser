@@ -24,8 +24,8 @@ namespace ZPLParser
 
         public static LabelTop Current
         {
-            get { return _current ?? (_current = new LabelTop(0)); }
-            set { _current = value; }
+            get => _current ?? (_current = new LabelTop(0));
+            set => _current = value;
         }
 
         public int Top { get; protected set; }

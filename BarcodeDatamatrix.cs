@@ -66,13 +66,12 @@ namespace ZPLParser
             catch (Exception ex)
             {
             }
-
         }
 
         public static BarcodeDatamatrix Current
         {
-            get { return _current ?? (_current = new BarcodeDatamatrix(0, 0, "")); }
-            set { _current = value; }
+            get => _current ?? (_current = new BarcodeDatamatrix(0, 0, ""));
+            set => _current = value;
         }
 
         public string Orientation { get; set; } = "N";
@@ -89,7 +88,8 @@ namespace ZPLParser
             var result = new List<string>();
             if (Origin != null)
                 result.AddRange(Origin.Render(context));
-            result.Add("^BX" + Orientation + "," + context.Scale(DMHeight) + "," + Quality + "," + Cols + "," + Rows + "," + FormatID + "," + ControlChar);
+            result.Add("^BX" + Orientation + "," + context.Scale(DMHeight) + "," + Quality + "," + Cols + "," + Rows +
+                       "," + FormatID + "," + ControlChar);
             if (AddFieldData)
                 result.Add("^FD" + Quality + "M," + Content + "^FS");
 

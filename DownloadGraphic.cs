@@ -40,10 +40,10 @@ namespace ZPLParser
             //catch (Exception ex)
             //{
             //}
-
         }
 
-        public DownloadGraphic(string destinationDevice, string imageName, string fileNameExtension, int totalNumberOfBytes, int numberOfRows, string data, bool compressed = false)
+        public DownloadGraphic(string destinationDevice, string imageName, string fileNameExtension,
+            int totalNumberOfBytes, int numberOfRows, string data, bool compressed = false)
         {
             DestinationDevice = destinationDevice;
             ImageName = imageName;
@@ -57,9 +57,10 @@ namespace ZPLParser
 
         public static DownloadGraphic Current
         {
-            get { return _current ?? (_current = new DownloadGraphic("R:", "image", ".GRF", 0, 0, "")); }
-            set { _current = value; }
+            get => _current ?? (_current = new DownloadGraphic("R:", "image", ".GRF", 0, 0, ""));
+            set => _current = value;
         }
+
         public string DestinationDevice { get; protected set; }
         public string ImageName { get; protected set; }
         public string FileNameExtension { get; protected set; }
@@ -73,11 +74,10 @@ namespace ZPLParser
             //^LL40 in dots -9999 to 9999 
             var result = new List<string>
             {
-                "~DG" + DestinationDevice + ImageName + FileNameExtension + "," + TotalNumberOfBytes + "," + NumberOfRows + "," + Data
+                "~DG" + DestinationDevice + ImageName + FileNameExtension + "," + TotalNumberOfBytes + "," +
+                NumberOfRows + "," + Data
             };
             return result;
         }
-
-
     }
 }

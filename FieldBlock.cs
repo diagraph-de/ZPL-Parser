@@ -9,7 +9,8 @@ namespace ZPLParser
         private readonly string properties;
         private byte[] elementBytes;
 
-        public FieldBlock(int positionX, int positionY, string text, int width, ScalableBitmappedFont font, int maxNumberOfLines = 1, int lineSpace = 0,
+        public FieldBlock(int positionX, int positionY, string text, int width, ScalableBitmappedFont font,
+            int maxNumberOfLines = 1, int lineSpace = 0,
             Enums.TextJustification textJustification = Enums.TextJustification.L, int hangingIndent = 0,
             NewLineConversionMethod newLineConversion = NewLineConversionMethod.ToZPLNewLine,
             bool useHexadecimalIndicator = true, bool reversePrint = false)
@@ -62,8 +63,8 @@ namespace ZPLParser
 
         public static FieldBlock Current
         {
-            get { return _current ?? (_current = new FieldBlock(0, 0, "", 0, new ScalableBitmappedFont(50, 50))); }
-            set { _current = value; }
+            get => _current ?? (_current = new FieldBlock(0, 0, "", 0, new ScalableBitmappedFont(50, 50)));
+            set => _current = value;
         }
 
         public int Width { get; }
@@ -92,7 +93,8 @@ namespace ZPLParser
                 result.AddRange(Font.Render(context));
             if (Origin != null)
                 result.AddRange(Origin.Render(context));
-            result.Add("^FB" + context.Scale(Width) + "," + MaxNumberOfLines + "," + context.Scale(LineSpace) + "," + TextJustification + "," +
+            result.Add("^FB" + context.Scale(Width) + "," + MaxNumberOfLines + "," + context.Scale(LineSpace) + "," +
+                       TextJustification + "," +
                        context.Scale(HangingIndent));
             result.Add(RenderFieldDataSection());
 

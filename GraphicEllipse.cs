@@ -8,8 +8,9 @@ namespace ZPLParser
         private readonly string properties;
         private byte[] elementBytes;
 
-        public GraphicEllipse(int positionX, int positionY, int width, int height, int borderThickness = 1, Enums.BlackWhite lineColor = Enums.BlackWhite.B) :
-            base(positionX, positionY, width, height, borderThickness, lineColor, 0)
+        public GraphicEllipse(int positionX, int positionY, int width, int height, int borderThickness = 1,
+            Enums.BlackWhite lineColor = Enums.BlackWhite.B) :
+            base(positionX, positionY, width, height, borderThickness, lineColor)
         {
             Base = typeof(GraphicElement);
         }
@@ -49,7 +50,8 @@ namespace ZPLParser
             var result = new List<string>();
             if (Origin != null)
                 result.AddRange(Origin.Render(context));
-            result.Add("^GE" + context.Scale(Width) + "," + context.Scale(Height) + "," + context.Scale(BorderThickness) + "," + LineColor);
+            result.Add("^GE" + context.Scale(Width) + "," + context.Scale(Height) + "," +
+                       context.Scale(BorderThickness) + "," + LineColor);
             if (AddFieldSeparator)
                 result.Add("^FS");
 

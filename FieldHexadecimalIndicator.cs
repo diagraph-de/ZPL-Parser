@@ -27,8 +27,8 @@ namespace ZPLParser
 
         public static FieldHexadecimalIndicator Current
         {
-            get { return _current ?? (_current = new FieldHexadecimalIndicator('_')); }
-            set { _current = value; }
+            get => _current ?? (_current = new FieldHexadecimalIndicator('_'));
+            set => _current = value;
         }
 
         public char Indicator { get; protected set; }

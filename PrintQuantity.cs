@@ -28,7 +28,8 @@ namespace ZPLParser
                 : Enums.YesNo.N;
         }
 
-        public PrintQuantity(int totalQuantity, int pause, int replicates, Enums.YesNo overridePauseCount = Enums.YesNo.N)
+        public PrintQuantity(int totalQuantity, int pause, int replicates,
+            Enums.YesNo overridePauseCount = Enums.YesNo.N)
         {
             TotalQuantity = totalQuantity;
             Pause = pause;
@@ -38,8 +39,8 @@ namespace ZPLParser
 
         public static PrintQuantity Current
         {
-            get { return _current ?? (_current = new PrintQuantity(0, 0, 0)); }
-            set { _current = value; }
+            get => _current ?? (_current = new PrintQuantity(0, 0, 0));
+            set => _current = value;
         }
 
         public int TotalQuantity { get; protected set; }

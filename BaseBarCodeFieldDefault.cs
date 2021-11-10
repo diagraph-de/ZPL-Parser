@@ -21,7 +21,8 @@ namespace ZPLParser
         public override IEnumerable<string> Render(ZPLRenderOptions context)
         {
             var result = new List<string>();
-            result.Add("^BY" + context.Scale(ModuleWidth) + "," + Math.Round(BarWidthRatio, 1) + "," + context.Scale(Height));
+            result.Add("^BY" + context.Scale(ModuleWidth) + "," + Math.Round(BarWidthRatio, 1) + "," +
+                       context.Scale(Height));
             return result;
         }
     }

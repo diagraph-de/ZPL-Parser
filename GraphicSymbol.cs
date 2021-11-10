@@ -38,9 +38,6 @@ namespace ZPLParser
                     case "B":
                         Orientation = Enums.Orientation.B; //read from bottom up 270 degrees
                         break;
-                    default:
-                        //RenderProperties = false;
-                        break;
                 }
 
             if (sp.Length > 1)
@@ -63,8 +60,8 @@ namespace ZPLParser
 
         public static GraphicSymbol Current
         {
-            get { return _current ?? (_current = new GraphicSymbol(Enums.GraphicSymbolCharacter.Copyright, 0, 0, 0, 0, Enums.Orientation.N)); }
-            set { _current = value; }
+            get => _current ?? (_current = new GraphicSymbol(Enums.GraphicSymbolCharacter.Copyright, 0, 0, 0, 0));
+            set => _current = value;
         }
 
         public Enums.Orientation Orientation { get; }

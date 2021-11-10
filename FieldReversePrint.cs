@@ -5,6 +5,7 @@ namespace ZPLParser
     public class FieldReversePrint : FieldElement
     {
         private static FieldReversePrint _current;
+
         public FieldReversePrint(string properties, byte[] elementBytes)
         {
             Base = typeof(FieldElement);
@@ -19,6 +20,7 @@ namespace ZPLParser
         }
 
         public static FieldReversePrint Current { get; set; }
+
         public override IEnumerable<string> Render(ZPLRenderOptions context)
         {
             //^FR 

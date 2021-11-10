@@ -27,6 +27,7 @@ namespace ZPLParser
                 var repl = (char)i;
                 fd = fd.Replace(find, repl.ToString());
             }
+
             Data = fd;
         }
 
@@ -38,8 +39,8 @@ namespace ZPLParser
 
         public static FieldData Current
         {
-            get { return _current ?? (_current = new FieldData("")); }
-            set { _current = value; }
+            get => _current ?? (_current = new FieldData(""));
+            set => _current = value;
         }
 
         public string Data { get; protected set; }

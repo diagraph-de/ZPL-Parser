@@ -2,7 +2,8 @@ namespace ZPLParser
 {
     public abstract class GraphicElement : PositionedElement
     {
-        public GraphicElement(int positionX, int positionY, int borderThickness = 1, Enums.BlackWhite lineColor = Enums.BlackWhite.B) :
+        public GraphicElement(int positionX, int positionY, int borderThickness = 1,
+            Enums.BlackWhite lineColor = Enums.BlackWhite.B) :
             base(positionX, positionY)
         {
             BorderThickness = borderThickness;

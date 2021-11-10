@@ -35,12 +35,8 @@ namespace ZPLParser
             MagnificationFactorY = Convert.ToInt16(sp[2]);
         }
 
-        public static RecallGraphic Current
-        {
-            get { return _current ?? (_current = new RecallGraphic(0, 0, 'R', "SAMPLE", ".GRF", 1, 1)); }
-            set { _current = value; }
-        }
-        public RecallGraphic(int positionX, int positionY, char storageDevice, string imageName, string extension, int magnificationFactorX = 1,
+        public RecallGraphic(int positionX, int positionY, char storageDevice, string imageName, string extension,
+            int magnificationFactorX = 1,
             int magnificationFactorY = 1)
             : base(positionX, positionY)
         {
@@ -51,11 +47,10 @@ namespace ZPLParser
             MagnificationFactorY = magnificationFactorY;
         }
 
-        public Bitmap GetBitmap()
+        public static RecallGraphic Current
         {
-            Bitmap bmp = new Bitmap(1, 1);
-
-            return bmp;
+            get => _current ?? (_current = new RecallGraphic(0, 0, 'R', "SAMPLE", ".GRF"));
+            set => _current = value;
         }
 
         public string StorageDevice { get; set; }
@@ -64,12 +59,20 @@ namespace ZPLParser
         public int MagnificationFactorX { get; set; }
         public int MagnificationFactorY { get; set; }
 
+        public Bitmap GetBitmap()
+        {
+            var bmp = new Bitmap(1, 1);
+
+            return bmp;
+        }
+
         public override IEnumerable<string> Render(ZPLRenderOptions context)
         {
             var result = new List<string>();
             if (Origin != null)
                 result.AddRange(Origin.Render(context));
-            result.Add(string.Format("^XG{0}{1}{2},{3},{4}", StorageDevice, ImageName, Extension, MagnificationFactorX, MagnificationFactorY));
+            result.Add(string.Format("^XG{0}{1}{2},{3},{4}", StorageDevice, ImageName, Extension, MagnificationFactorX,
+                MagnificationFactorY));
 
             return result;
         }

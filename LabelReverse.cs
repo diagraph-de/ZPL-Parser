@@ -28,8 +28,8 @@ namespace ZPLParser
 
         public static LabelReverse Current
         {
-            get { return _current ?? (_current = new LabelReverse(Enums.YesNo.N)); }
-            set { _current = value; }
+            get => _current ?? (_current = new LabelReverse(Enums.YesNo.N));
+            set => _current = value;
         }
 
         public Enums.YesNo Reverse { get; protected set; }

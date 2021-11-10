@@ -14,7 +14,8 @@ namespace ZPLParser
 
         private byte[] elementBytes;
 
-        public GraphicBox(int positionX, int positionY, int width, int height, int borderThickness = 1, Enums.BlackWhite lineColor = Enums.BlackWhite.B,
+        public GraphicBox(int positionX, int positionY, int width, int height, int borderThickness = 1,
+            Enums.BlackWhite lineColor = Enums.BlackWhite.B,
             int cornerRounding = 0) :
             base(positionX, positionY, borderThickness, lineColor)
         {
@@ -63,8 +64,8 @@ namespace ZPLParser
 
         public static GraphicBox Current
         {
-            get { return _current ?? (_current = new GraphicBox(0, 0, 0, 0)); }
-            set { _current = value; }
+            get => _current ?? (_current = new GraphicBox(0, 0, 0, 0));
+            set => _current = value;
         }
 
         public int Width { get; set; }
@@ -80,7 +81,8 @@ namespace ZPLParser
             var result = new List<string>();
             if (Origin != null)
                 result.AddRange(Origin.Render(context));
-            result.Add("^GB" + context.Scale(Width) + "," + context.Scale(Height) + "," + context.Scale(BorderThickness) + "," + LineColor + "," +
+            result.Add("^GB" + context.Scale(Width) + "," + context.Scale(Height) + "," +
+                       context.Scale(BorderThickness) + "," + LineColor + "," +
                        context.Scale(CornerRounding));
             if (AddFieldSeparator)
                 result.Add("^FS");

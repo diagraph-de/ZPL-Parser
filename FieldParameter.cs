@@ -34,6 +34,7 @@ namespace ZPLParser
                         Direction = Enums.Direction.R; //reverse printing (right to left)
                         break;
                 }
+
             if (sp.Length > 1)
                 Gap = Convert.ToInt16(sp[1]);
         }
@@ -47,8 +48,8 @@ namespace ZPLParser
 
         public static FieldParameter Current
         {
-            get { return _current ?? (_current = new FieldParameter()); }
-            set { _current = value; }
+            get => _current ?? (_current = new FieldParameter());
+            set => _current = value;
         }
 
         public Enums.Direction Direction { get; set; } = Enums.Direction.H;

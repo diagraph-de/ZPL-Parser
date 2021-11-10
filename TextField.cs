@@ -19,7 +19,8 @@ namespace ZPLParser
         /// <param name="orientation"></param>
         /// <param name="useHexadecimalIndicator"></param>
         public TextField(int positionX, int positionY, string text, ScalableBitmappedFont font,
-            NewLineConversionMethod newLineConversion = NewLineConversionMethod.ToSpace, bool useHexadecimalIndicator = true, bool reversePrint = false) :
+            NewLineConversionMethod newLineConversion = NewLineConversionMethod.ToSpace,
+            bool useHexadecimalIndicator = true, bool reversePrint = false) :
             base(positionX, positionY)
         {
             Text = text;
@@ -67,11 +68,11 @@ namespace ZPLParser
         {
             var sb = new StringBuilder();
             sb.Append(UseHexadecimalIndicator
-                          ? "^FH"
-                          : "");
+                ? "^FH"
+                : "");
             sb.Append(ReversePrint
-                          ? "^FR"
-                          : "");
+                ? "^FR"
+                : "");
             sb.Append("^FD");
             foreach (var c in Text)
                 sb.Append(SanitizeCharacter(c));

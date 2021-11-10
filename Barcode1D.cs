@@ -2,7 +2,8 @@
 {
     public abstract class Barcode1D : PositionedElement
     {
-        public Barcode1D(int positionX, int positionY, string content, int height, Enums.Orientation orientation, bool printInterpretationLine,
+        public Barcode1D(int positionX, int positionY, string content, int height, Enums.Orientation orientation,
+            bool printInterpretationLine,
             bool printInterpretationLineAboveCode) : base(positionX, positionY)
         {
             Origin = new FieldOrigin(positionX, positionY);
