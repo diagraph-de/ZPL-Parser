@@ -15,7 +15,7 @@ namespace ZPLParser
         public override IEnumerable<string> Render(ZPLRenderOptions context)
         {
             //^XZ
-            return new[] { "^XZ" };
+            return new[] {"^XZ"};
         }
     }
 }

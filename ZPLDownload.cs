@@ -46,10 +46,10 @@ namespace ZPLParser
             //Resize based on dpi
             var contextImage =
                 new Bitmap(Image,
-                    new Size((int)Math.Round(Image.Width * context.ScaleFactor),
-                        (int)Math.Round(Image.Height * context.ScaleFactor)));
+                    new Size((int) Math.Round(Image.Width * context.ScaleFactor),
+                        (int) Math.Round(Image.Height * context.ScaleFactor)));
 
-            NumberOfBytesPerRow = (int)Math.Ceiling(contextImage.Width / 8.0); //Each pixel is 1 bit or (1/8) byte
+            NumberOfBytesPerRow = (int) Math.Ceiling(contextImage.Width / 8.0); //Each pixel is 1 bit or (1/8) byte
             TotalNumberOfBytes = contextImage.Height * NumberOfBytesPerRow;
 
             List<string> result;

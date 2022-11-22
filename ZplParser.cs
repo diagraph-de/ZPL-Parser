@@ -1022,7 +1022,7 @@ namespace ZPLParser
                     _parentElement = null;
 
                 if (fieldElement)
-                    _fieldelements.Add((FieldElement)element);
+                    _fieldelements.Add((FieldElement) element);
             }
             catch (Exception ex)
             {
@@ -1080,7 +1080,7 @@ namespace ZPLParser
         private string RenderTabs(BaseElement fieldData)
         {
             var ret = "";
-            var tab = (char)9;
+            var tab = (char) 9;
             var elem = fieldData.Child;
             while (elem != null && elem.HasChild)
             {

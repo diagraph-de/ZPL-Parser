@@ -13,45 +13,45 @@ namespace ZPLParser
     {
         private static readonly Dictionary<int, string> MapCode = new Dictionary<int, string>
         {
-            { 1, "G" },
-            { 2, "H" },
-            { 3, "I" },
-            { 4, "J" },
-            { 5, "K" },
-            { 6, "L" },
-            { 7, "M" },
-            { 8, "N" },
-            { 9, "O" },
-            { 10, "P" },
-            { 11, "Q" },
-            { 12, "R" },
-            { 13, "S" },
-            { 14, "T" },
-            { 15, "U" },
-            { 16, "V" },
-            { 17, "W" },
-            { 18, "X" },
-            { 19, "Y" },
-            { 20, "g" },
-            { 40, "h" },
-            { 60, "i" },
-            { 80, "j" },
-            { 100, "k" },
-            { 120, "l" },
-            { 140, "m" },
-            { 160, "n" },
-            { 180, "o" },
-            { 200, "p" },
-            { 220, "q" },
-            { 240, "r" },
-            { 260, "s" },
-            { 280, "t" },
-            { 300, "u" },
-            { 320, "v" },
-            { 340, "w" },
-            { 360, "x" },
-            { 380, "y" },
-            { 400, "z" }
+            {1, "G"},
+            {2, "H"},
+            {3, "I"},
+            {4, "J"},
+            {5, "K"},
+            {6, "L"},
+            {7, "M"},
+            {8, "N"},
+            {9, "O"},
+            {10, "P"},
+            {11, "Q"},
+            {12, "R"},
+            {13, "S"},
+            {14, "T"},
+            {15, "U"},
+            {16, "V"},
+            {17, "W"},
+            {18, "X"},
+            {19, "Y"},
+            {20, "g"},
+            {40, "h"},
+            {60, "i"},
+            {80, "j"},
+            {100, "k"},
+            {120, "l"},
+            {140, "m"},
+            {160, "n"},
+            {180, "o"},
+            {200, "p"},
+            {220, "q"},
+            {240, "r"},
+            {260, "s"},
+            {280, "t"},
+            {300, "u"},
+            {320, "v"},
+            {340, "w"},
+            {360, "x"},
+            {380, "y"},
+            {400, "z"}
         };
 
         private int blackLimit = 380;
@@ -72,7 +72,7 @@ namespace ZPLParser
 
         public static strucZPL ZPLfromBitmap(Bitmap bmp, bool createBody = true, bool compressHex = false)
         {
-            var ZPLImage = new strucZPL { compressed = compressHex };
+            var ZPLImage = new strucZPL {compressed = compressHex};
 
             var zp = new ImageHelper
             {
@@ -173,8 +173,8 @@ namespace ZPLParser
             var data = bmpCompressed.LockBits(dim, ImageLockMode.ReadOnly, PixelFormat.Format1bppIndexed);
             try
             {
-                var pixelData = (byte*)data.Scan0.ToPointer();
-                var rightMask = (byte)(0xff << (data.Stride * 8 - dim.Width));
+                var pixelData = (byte*) data.Scan0.ToPointer();
+                var rightMask = (byte) (0xff << (data.Stride * 8 - dim.Width));
                 imageData = new byte[dim.Height][];
 
                 for (var row = 0; row < dim.Height; row++)
@@ -184,8 +184,8 @@ namespace ZPLParser
 
                     for (var col = 0; col < stride; col++)
                     {
-                        var f = (byte)(0xff ^ rowStart[col]);
-                        f = col == stride - 1 ? (byte)(f & rightMask) : f;
+                        var f = (byte) (0xff ^ rowStart[col]);
+                        f = col == stride - 1 ? (byte) (f & rightMask) : f;
                         imageData[row][col] = f;
                     }
                 }
@@ -221,8 +221,8 @@ namespace ZPLParser
             var nibbles = new byte[row.Length * 2];
             for (var i = 0; i < row.Length; i++)
             {
-                nibbles[i * 2] = (byte)(row[i] >> 4);
-                nibbles[i * 2 + 1] = (byte)(row[i] & 0x0f);
+                nibbles[i * 2] = (byte) (row[i] >> 4);
+                nibbles[i * 2 + 1] = (byte) (row[i] & 0x0f);
             }
 
             for (var i = 0; i < nibbles.Length; i++)
@@ -396,7 +396,7 @@ namespace ZPLParser
                 var width = image.WidthBytes * 8;
                 var height = image.TotalBytes / image.WidthBytes;
 
-                ret = (Bitmap)BinaryToBitmap(grfData, width, height, compressed);
+                ret = (Bitmap) BinaryToBitmap(grfData, width, height, compressed);
             }
             catch (Exception ex)
             {
@@ -663,7 +663,7 @@ namespace ZPLParser
             var charCnt = 1;
             for (var i = 0; i < grfData.Length; i++)
             {
-                var c = (char)grfData[i];
+                var c = (char) grfData[i];
                 if ("GHIJKLMNOPQRSTUVWXYghIjkImnopqrstuvwxyz".Contains(c))
                 {
                     charCnt += repeatsDictionary[c];
@@ -753,8 +753,8 @@ namespace ZPLParser
                 {
                     if (currentBit == 0)
                     {
-                        var hex = ((char)grfData[currentByte]).ToString();
-                        hex += ((char)grfData[currentByte + 1]).ToString();
+                        var hex = ((char) grfData[currentByte]).ToString();
+                        hex += ((char) grfData[currentByte + 1]).ToString();
                         binString = HexToBinaryString(hex);
                     }
 

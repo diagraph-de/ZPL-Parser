@@ -1,0 +1,12 @@
+C:\Users\daniel\Projekte\git2\Labelparsers\bin\Labelparser-ZPL.dll
+C:\Users\daniel\Projekte\git2\Labelparsers\bin\Labelparser-ZPL.pdb
+C:\Users\daniel\Projekte\git2\Labelparsers\ZPL-Parser\obj\Debug\Labelparser-ZPL.csproj.AssemblyReference.cache
+C:\Users\daniel\Projekte\git2\Labelparsers\ZPL-Parser\obj\Debug\Labelparser-ZPL.csproj.CoreCompileInputs.cache
+C:\Users\daniel\Projekte\git2\Labelparsers\ZPL-Parser\obj\Debug\Labelparser-ZPL.dll
+C:\Users\daniel\Projekte\git2\Labelparsers\ZPL-Parser\obj\Debug\Labelparser-ZPL.pdb
+C:\Users\d.frede\Projekte\git\Labelparsers\bin\Labelparser-ZPL.dll
+C:\Users\d.frede\Projekte\git\Labelparsers\bin\Labelparser-ZPL.pdb
+C:\Users\d.frede\Projekte\git\Labelparsers\ZPL-Parser\obj\Debug\Labelparser-ZPL.csproj.AssemblyReference.cache
+C:\Users\d.frede\Projekte\git\Labelparsers\ZPL-Parser\obj\Debug\Labelparser-ZPL.csproj.CoreCompileInputs.cache
+C:\Users\d.frede\Projekte\git\Labelparsers\ZPL-Parser\obj\Debug\Labelparser-ZPL.dll
+C:\Users\d.frede\Projekte\git\Labelparsers\ZPL-Parser\obj\Debug\Labelparser-ZPL.pdb
