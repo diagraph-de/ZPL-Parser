@@ -5,7 +5,7 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Allen.Labelparser.ZPL
+namespace Diagraph.Labelparser.ZPL
 {
     public class GraphicField : GraphicElement
     {

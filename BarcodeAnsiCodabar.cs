@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Allen.Labelparser.ZPL
+namespace Diagraph.Labelparser.ZPL
 {
     public class BarcodeAnsiCodabar : Barcode1D
     {

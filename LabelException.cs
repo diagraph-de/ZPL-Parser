@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Allen.Labelparser.ZPL
+namespace Diagraph.Labelparser.ZPL
 {
     public class LabelException : Exception
     {

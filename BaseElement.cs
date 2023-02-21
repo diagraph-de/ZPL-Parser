@@ -6,7 +6,7 @@ using System.Linq;
 
 #endregion
 
-namespace Allen.Labelparser.ZPL
+namespace Diagraph.Labelparser.ZPL
 {
     public abstract class BaseElement
     {

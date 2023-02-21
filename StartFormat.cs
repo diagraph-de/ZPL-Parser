@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Allen.Labelparser.ZPL
+namespace Diagraph.Labelparser.ZPL
 {
     public class StartFormat : BaseElement
     {

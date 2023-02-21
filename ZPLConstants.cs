@@ -1,4 +1,4 @@
-﻿namespace Allen.Labelparser.ZPL
+﻿namespace Diagraph.Labelparser.ZPL
 {
     public static class ZPLConstants
     {
