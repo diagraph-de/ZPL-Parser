@@ -8,7 +8,7 @@
     <ProjectGuid>{31D7D48D-D093-4B68-B540-0CD4F2220C30}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Allen.Labelparser.ZPL</RootNamespace>
+    <RootNamespace>Diagraph.Labelparser.ZPL</RootNamespace>
     <AssemblyName>Labelparser-ZPL</AssemblyName>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
