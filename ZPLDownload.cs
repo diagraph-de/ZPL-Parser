@@ -6,7 +6,7 @@ using System.Drawing;
 
 #endregion
 
-namespace ZPLParser
+namespace Allen.Labelparser.ZPL
 {
     public abstract class BaseDownload : BaseElement
     {

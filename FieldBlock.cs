@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace ZPLParser
+namespace Allen.Labelparser.ZPL
 {
     public class FieldBlock : TextField
     {

@@ -6,7 +6,7 @@ using System.Linq;
 
 #endregion
 
-namespace ZPLParser
+namespace Allen.Labelparser.ZPL
 {
     public abstract class BaseElement
     {

@@ -1,4 +1,4 @@
-namespace ZPLParser
+namespace Allen.Labelparser.ZPL
 {
     public abstract class GraphicElement : PositionedElement
     {

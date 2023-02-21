@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ZPLParser
+namespace Allen.Labelparser.ZPL
 {
     public class BaseRaw : BaseElement
     {

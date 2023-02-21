@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 #endregion
 
-namespace ZPLParser
+namespace Allen.Labelparser.ZPL
 {
     public class GraphicBox : GraphicElement
     {

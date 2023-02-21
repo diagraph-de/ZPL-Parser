@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace ZPLParser
+namespace Allen.Labelparser.ZPL
 {
     public class ZplParser
     {

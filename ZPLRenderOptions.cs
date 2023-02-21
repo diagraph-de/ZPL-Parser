@@ -1,4 +1,4 @@
-﻿namespace ZPLParser
+﻿namespace Allen.Labelparser.ZPL
 {
     /// <summary>
     ///     Holding redering settings

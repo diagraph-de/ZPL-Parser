@@ -7,7 +7,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 
-namespace ZPLParser
+namespace Allen.Labelparser.ZPL
 {
     public class ImageHelper
     {

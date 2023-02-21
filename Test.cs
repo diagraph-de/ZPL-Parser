@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 
-namespace ZPLParser
+namespace Allen.Labelparser.ZPL
 {
     //[TestClass]
     public class BasicTests

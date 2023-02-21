@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ZPLParser
+namespace Allen.Labelparser.ZPL
 {
     public enum NewLineConversionMethod
     {

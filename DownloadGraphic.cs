@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 
-namespace ZPLParser
+namespace Allen.Labelparser.ZPL
 {
     public class DownloadGraphic : BaseElement
     {
