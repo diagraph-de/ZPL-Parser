@@ -72,7 +72,7 @@ namespace Diagraph.Labelparser.ZPL
 
         public static strucZPL ZPLfromBitmap(Bitmap bmp, bool createBody = true, bool compressHex = false)
         {
-            var ZPLImage = new strucZPL {compressed = compressHex};
+            var ZPLImage = new strucZPL { compressed = compressHex };
 
             var zp = new ImageHelper
             {
@@ -173,8 +173,8 @@ namespace Diagraph.Labelparser.ZPL
             var data = bmpCompressed.LockBits(dim, ImageLockMode.ReadOnly, PixelFormat.Format1bppIndexed);
             try
             {
-                var pixelData = (byte*) data.Scan0.ToPointer();
-                var rightMask = (byte) (0xff << (data.Stride * 8 - dim.Width));
+                var pixelData = (byte*)data.Scan0.ToPointer();
+                var rightMask = (byte)(0xff << (data.Stride * 8 - dim.Width));
                 imageData = new byte[dim.Height][];
 
                 for (var row = 0; row < dim.Height; row++)
@@ -184,8 +184,8 @@ namespace Diagraph.Labelparser.ZPL
 
                     for (var col = 0; col < stride; col++)
                     {
-                        var f = (byte) (0xff ^ rowStart[col]);
-                        f = col == stride - 1 ? (byte) (f & rightMask) : f;
+                        var f = (byte)(0xff ^ rowStart[col]);
+                        f = col == stride - 1 ? (byte)(f & rightMask) : f;
                         imageData[row][col] = f;
                     }
                 }
@@ -221,8 +221,8 @@ namespace Diagraph.Labelparser.ZPL
             var nibbles = new byte[row.Length * 2];
             for (var i = 0; i < row.Length; i++)
             {
-                nibbles[i * 2] = (byte) (row[i] >> 4);
-                nibbles[i * 2 + 1] = (byte) (row[i] & 0x0f);
+                nibbles[i * 2] = (byte)(row[i] >> 4);
+                nibbles[i * 2 + 1] = (byte)(row[i] & 0x0f);
             }
 
             for (var i = 0; i < nibbles.Length; i++)
@@ -396,7 +396,7 @@ namespace Diagraph.Labelparser.ZPL
                 var width = image.WidthBytes * 8;
                 var height = image.TotalBytes / image.WidthBytes;
 
-                ret = (Bitmap) BinaryToBitmap(grfData, width, height, compressed);
+                ret = (Bitmap)BinaryToBitmap(grfData, width, height, compressed);
             }
             catch (Exception ex)
             {
@@ -663,7 +663,7 @@ namespace Diagraph.Labelparser.ZPL
             var charCnt = 1;
             for (var i = 0; i < grfData.Length; i++)
             {
-                var c = (char) grfData[i];
+                var c = (char)grfData[i];
                 if ("GHIJKLMNOPQRSTUVWXYghIjkImnopqrstuvwxyz".Contains(c))
                 {
                     charCnt += repeatsDictionary[c];
@@ -745,34 +745,34 @@ namespace Diagraph.Labelparser.ZPL
             var binString = "";
 
             for (var h = 0; h < bitmapImage.Height; h++)
-            for (var w = 0; w < bitmapImage.Width * 2; w++)
-            {
-                bitmapImage.SetPixel(w / 2, h, Color.White);
-
-                try
+                for (var w = 0; w < bitmapImage.Width * 2; w++)
                 {
-                    if (currentBit == 0)
+                    bitmapImage.SetPixel(w / 2, h, Color.White);
+
+                    try
                     {
-                        var hex = ((char) grfData[currentByte]).ToString();
-                        hex += ((char) grfData[currentByte + 1]).ToString();
-                        binString = HexToBinaryString(hex);
+                        if (currentBit == 0)
+                        {
+                            var hex = ((char)grfData[currentByte]).ToString();
+                            hex += ((char)grfData[currentByte + 1]).ToString();
+                            binString = HexToBinaryString(hex);
+                        }
+
+                        if (binString.Substring(currentBit, 1) == "1")
+                            bitmapImage.SetPixel(w / 2, h, Color.Black);
+
+                        currentBit++;
+                        if (currentBit > 7)
+                        {
+                            currentByte += 1;
+                            currentBit = 0;
+                        }
                     }
-
-                    if (binString.Substring(currentBit, 1) == "1")
-                        bitmapImage.SetPixel(w / 2, h, Color.Black);
-
-                    currentBit++;
-                    if (currentBit > 7)
+                    catch (Exception ex)
                     {
-                        currentByte += 1;
-                        currentBit = 0;
+                        break;
                     }
                 }
-                catch (Exception ex)
-                {
-                    break;
-                }
-            }
 
 
             ////Save Debug image

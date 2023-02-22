@@ -29,11 +29,11 @@
 
         public bool CompressedRendering { get; set; }
 
-        public double ScaleFactor => (double) TargetPrintDPI / SourcePrintDPI;
+        public double ScaleFactor => (double)TargetPrintDPI / SourcePrintDPI;
 
         public int Scale(int input)
         {
-            return (int) (input * ScaleFactor);
+            return (int)(input * ScaleFactor);
         }
 
         public double Scale(double input)

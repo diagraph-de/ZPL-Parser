@@ -163,7 +163,7 @@ namespace Diagraph.Labelparser.ZPL
                         {
                         }
 
-                        bmp = (Bitmap) new ImageHelper().ZPLToBitmap(strucZPL, compressed);
+                        bmp = (Bitmap)new ImageHelper().ZPLToBitmap(strucZPL, compressed);
                     }
 
                     break;

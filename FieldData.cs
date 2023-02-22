@@ -24,7 +24,7 @@ namespace Diagraph.Labelparser.ZPL
             for (var i = 0; i < 255; i++)
             {
                 var find = indicator + i.ToString("X4").ToLower();
-                var repl = (char) i;
+                var repl = (char)i;
                 fd = fd.Replace(find, repl.ToString());
             }
 

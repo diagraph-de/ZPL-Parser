@@ -15,7 +15,7 @@ namespace Diagraph.Labelparser.ZPL
         public override IEnumerable<string> Render(ZPLRenderOptions context)
         {
             //^XZ
-            return new[] {"^XZ"};
+            return new[] { "^XZ" };
         }
     }
 }
