@@ -1,0 +1,8 @@
+﻿################################################################################
+# Diese .gitignore-Datei wurde von Microsoft(R) Visual Studio automatisch erstellt.
+################################################################################
+
+/bin/x86/Release/Labelparser-ZPL.pdb
+/bin/x86/Release/Labelparser-ZPL.dll
+/obj/x86/Release/Labelparser-ZPL.pdb
+/obj/x86/Release/Labelparser-ZPL.dll
