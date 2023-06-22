@@ -74,7 +74,7 @@ namespace Diagraph.Labelparser.ZPL
                 ? "^FR"
                 : "");
             sb.Append("^FD");
-            foreach (var c in Text)
+            foreach (var c in Text+"")
                 sb.Append(SanitizeCharacter(c));
             sb.Append("^FS");
 
