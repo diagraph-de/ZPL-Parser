@@ -409,3 +409,4 @@ FodyWeavers.xsd
 /obj/x86/Debug/Labelparser-ZPL.dll
 /obj/x86/Debug/Labelparser-ZPL.csproj.AssemblyReference.cache
 /obj/x86/Release/Labelparser-ZPL.csproj.AssemblyReference.cache
+/obj/x86/Release/Labelparser-ZPL.csproj.CoreCompileInputs.cache
