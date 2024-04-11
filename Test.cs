@@ -103,7 +103,7 @@ namespace Diagraph.Labelparser.ZPL
 
             var renderEngine = new ZPLEngine(labelElements);
             var output = renderEngine.ToZPLString(new ZPLRenderOptions
-            { AddEmptyLineBeforeElementStart = true, TargetPrintDPI = 600, SourcePrintDPI = 200 });
+                { AddEmptyLineBeforeElementStart = true, TargetPrintDPI = 600, SourcePrintDPI = 200 });
 
             Console.WriteLine(output);
         }

@@ -13,45 +13,45 @@ namespace Diagraph.Labelparser.ZPL
     {
         private static readonly Dictionary<int, string> MapCode = new Dictionary<int, string>
         {
-            {1, "G"},
-            {2, "H"},
-            {3, "I"},
-            {4, "J"},
-            {5, "K"},
-            {6, "L"},
-            {7, "M"},
-            {8, "N"},
-            {9, "O"},
-            {10, "P"},
-            {11, "Q"},
-            {12, "R"},
-            {13, "S"},
-            {14, "T"},
-            {15, "U"},
-            {16, "V"},
-            {17, "W"},
-            {18, "X"},
-            {19, "Y"},
-            {20, "g"},
-            {40, "h"},
-            {60, "i"},
-            {80, "j"},
-            {100, "k"},
-            {120, "l"},
-            {140, "m"},
-            {160, "n"},
-            {180, "o"},
-            {200, "p"},
-            {220, "q"},
-            {240, "r"},
-            {260, "s"},
-            {280, "t"},
-            {300, "u"},
-            {320, "v"},
-            {340, "w"},
-            {360, "x"},
-            {380, "y"},
-            {400, "z"}
+            { 1, "G" },
+            { 2, "H" },
+            { 3, "I" },
+            { 4, "J" },
+            { 5, "K" },
+            { 6, "L" },
+            { 7, "M" },
+            { 8, "N" },
+            { 9, "O" },
+            { 10, "P" },
+            { 11, "Q" },
+            { 12, "R" },
+            { 13, "S" },
+            { 14, "T" },
+            { 15, "U" },
+            { 16, "V" },
+            { 17, "W" },
+            { 18, "X" },
+            { 19, "Y" },
+            { 20, "g" },
+            { 40, "h" },
+            { 60, "i" },
+            { 80, "j" },
+            { 100, "k" },
+            { 120, "l" },
+            { 140, "m" },
+            { 160, "n" },
+            { 180, "o" },
+            { 200, "p" },
+            { 220, "q" },
+            { 240, "r" },
+            { 260, "s" },
+            { 280, "t" },
+            { 300, "u" },
+            { 320, "v" },
+            { 340, "w" },
+            { 360, "x" },
+            { 380, "y" },
+            { 400, "z" }
         };
 
         private int blackLimit = 380;
@@ -745,34 +745,34 @@ namespace Diagraph.Labelparser.ZPL
             var binString = "";
 
             for (var h = 0; h < bitmapImage.Height; h++)
-                for (var w = 0; w < bitmapImage.Width * 2; w++)
+            for (var w = 0; w < bitmapImage.Width * 2; w++)
+            {
+                bitmapImage.SetPixel(w / 2, h, Color.White);
+
+                try
                 {
-                    bitmapImage.SetPixel(w / 2, h, Color.White);
-
-                    try
+                    if (currentBit == 0)
                     {
-                        if (currentBit == 0)
-                        {
-                            var hex = ((char)grfData[currentByte]).ToString();
-                            hex += ((char)grfData[currentByte + 1]).ToString();
-                            binString = HexToBinaryString(hex);
-                        }
-
-                        if (binString.Substring(currentBit, 1) == "1")
-                            bitmapImage.SetPixel(w / 2, h, Color.Black);
-
-                        currentBit++;
-                        if (currentBit > 7)
-                        {
-                            currentByte += 1;
-                            currentBit = 0;
-                        }
+                        var hex = ((char)grfData[currentByte]).ToString();
+                        hex += ((char)grfData[currentByte + 1]).ToString();
+                        binString = HexToBinaryString(hex);
                     }
-                    catch (Exception ex)
+
+                    if (binString.Substring(currentBit, 1) == "1")
+                        bitmapImage.SetPixel(w / 2, h, Color.Black);
+
+                    currentBit++;
+                    if (currentBit > 7)
                     {
-                        break;
+                        currentByte += 1;
+                        currentBit = 0;
                     }
                 }
+                catch (Exception ex)
+                {
+                    break;
+                }
+            }
 
 
             ////Save Debug image
