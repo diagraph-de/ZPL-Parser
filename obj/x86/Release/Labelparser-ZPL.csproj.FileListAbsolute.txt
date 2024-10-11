@@ -1,6 +1,0 @@
-C:\Users\d.frede\Projekte\git\Labelparsers\ZPL-Parser\bin\x86\Release\Labelparser-ZPL.dll
-C:\Users\d.frede\Projekte\git\Labelparsers\ZPL-Parser\bin\x86\Release\Labelparser-ZPL.pdb
-C:\Users\d.frede\Projekte\git\Labelparsers\ZPL-Parser\obj\x86\Release\Labelparser-ZPL.csproj.AssemblyReference.cache
-C:\Users\d.frede\Projekte\git\Labelparsers\ZPL-Parser\obj\x86\Release\Labelparser-ZPL.csproj.CoreCompileInputs.cache
-C:\Users\d.frede\Projekte\git\Labelparsers\ZPL-Parser\obj\x86\Release\Labelparser-ZPL.dll
-C:\Users\d.frede\Projekte\git\Labelparsers\ZPL-Parser\obj\x86\Release\Labelparser-ZPL.pdb
