@@ -412,3 +412,4 @@ FodyWeavers.xsd
 /obj/x86/Release/Labelparser-ZPL.csproj.CoreCompileInputs.cache
 /obj/x86/Debug/Labelparser-ZPL.csproj.CoreCompileInputs.cache
 /obj/x86/Debug/Labelparser-ZPL.csproj.FileListAbsolute.txt
+/obj/x86/Debug/.NETFramework,Version=v4.8.AssemblyAttributes.cs
