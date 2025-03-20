@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -75,7 +76,33 @@ namespace Diagraph.Labelparser.ZPL
                 }
 
                 Data = sb.ToString().Trim();
-                Bitmap = CreateBitmap(compressed);
+
+                try
+                { 
+                    //create bitmapfrom base64 png
+                    Bitmap = CreateBitmapFromPng(Data);
+                }
+                catch (Exception e)
+                {
+                    Bitmap = CreateBitmap(compressed);
+                } 
+            }
+        }
+        public static Bitmap CreateBitmapFromPng(string base64Png)
+        {
+            try
+            {
+                byte[] imageBytes = Convert.FromBase64String(base64Png);
+                using (MemoryStream ms = new MemoryStream(imageBytes))
+                {
+                    Bitmap bitmap = new Bitmap(ms); 
+                    return new Bitmap(bitmap);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error decoding Base64 PNG: {ex.Message}");
+                return null;
             }
         }
 
