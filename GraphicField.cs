@@ -78,31 +78,14 @@ namespace Diagraph.Labelparser.ZPL
                 Data = sb.ToString().Trim();
 
                 try
-                { 
+                {
                     //create bitmapfrom base64 png
                     Bitmap = CreateBitmapFromPng(Data);
                 }
                 catch (Exception e)
                 {
                     Bitmap = CreateBitmap(compressed);
-                } 
-            }
-        }
-        public static Bitmap CreateBitmapFromPng(string base64Png)
-        {
-            try
-            {
-                byte[] imageBytes = Convert.FromBase64String(base64Png);
-                using (MemoryStream ms = new MemoryStream(imageBytes))
-                {
-                    Bitmap bitmap = new Bitmap(ms); 
-                    return new Bitmap(bitmap);
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error decoding Base64 PNG: {ex.Message}");
-                return null;
             }
         }
 
@@ -156,6 +139,24 @@ namespace Diagraph.Labelparser.ZPL
                     }
                 }
                 //Data = GetBitmapData();
+            }
+        }
+
+        public static Bitmap CreateBitmapFromPng(string base64Png)
+        {
+            try
+            {
+                var imageBytes = Convert.FromBase64String(base64Png);
+                using (var ms = new MemoryStream(imageBytes))
+                {
+                    var bitmap = new Bitmap(ms);
+                    return new Bitmap(bitmap);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error decoding Base64 PNG: {ex.Message}");
+                return null;
             }
         }
 

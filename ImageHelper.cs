@@ -399,7 +399,6 @@ namespace Diagraph.Labelparser.ZPL
                 ret = (Bitmap)BinaryToBitmap(grfData, width, height, compressed);
 
 
-
                 //ret.Save(@"C:\Users\d.frede\Desktop\backup.bmp");
             }
             catch (Exception ex)
