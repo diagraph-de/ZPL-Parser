@@ -1,56 +1,55 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Diagraph.Labelparser.ZPL
+namespace Diagraph.Labelparser.ZPL;
+
+public class FieldData : FieldElement
 {
-    public class FieldData : FieldElement
+    private static FieldData _current;
+    private readonly string properties;
+    private byte[] elementBytes;
+
+    public FieldData(BaseElement child, string properties, byte[] elementBytes)
     {
-        private static FieldData _current;
-        private readonly string properties;
-        private byte[] elementBytes;
+        Base = typeof(FieldElement);
+        Child = child;
+        this.properties = properties.Replace(Environment.NewLine, "");
+        this.elementBytes = elementBytes;
 
-        public FieldData(BaseElement child, string properties, byte[] elementBytes)
+        Current = this;
+        var fd = this.properties;
+
+        //replace FieldHexadecimalIndicator
+        var indicator = FieldHexadecimalIndicator.Current.Indicator;
+        for (var i = 0; i < 255; i++)
         {
-            Base = typeof(FieldElement);
-            Child = child;
-            this.properties = properties.Replace(Environment.NewLine, "");
-            this.elementBytes = elementBytes;
-
-            Current = this;
-            var fd = this.properties;
-
-            //replace FieldHexadecimalIndicator
-            var indicator = FieldHexadecimalIndicator.Current.Indicator;
-            for (var i = 0; i < 255; i++)
-            {
-                var find = indicator + i.ToString("X4").ToLower();
-                var repl = (char)i;
-                fd = fd.Replace(find, repl.ToString());
-            }
-
-            Data = fd;
+            var find = indicator + i.ToString("X4").ToLower();
+            var repl = (char)i;
+            fd = fd.Replace(find, repl.ToString());
         }
 
-        public FieldData(string data)
-        {
-            Base = typeof(FieldElement);
-            Data = data; //data to be printed, max 3072
-        }
+        Data = fd;
+    }
 
-        public static FieldData Current
-        {
-            get => _current ?? (_current = new FieldData(""));
-            set => _current = value;
-        }
+    public FieldData(string data)
+    {
+        Base = typeof(FieldElement);
+        Data = data; //data to be printed, max 3072
+    }
 
-        public string Data { get; protected set; }
+    public static FieldData Current
+    {
+        get => _current ?? (_current = new FieldData(""));
+        set => _current = value;
+    }
 
-        public override IEnumerable<string> Render(ZPLRenderOptions context)
-        {
-            //^FD123 
-            var result = new List<string>();
-            result.Add("^FD" + Data);
-            return result;
-        }
+    public string Data { get; protected set; }
+
+    public override IEnumerable<string> Render(ZPLRenderOptions context)
+    {
+        //^FD123 
+        var result = new List<string>();
+        result.Add("^FD" + Data);
+        return result;
     }
 }

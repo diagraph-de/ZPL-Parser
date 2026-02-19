@@ -1,6 +1,5 @@
-namespace Diagraph.Labelparser.ZPL
+namespace Diagraph.Labelparser.ZPL;
+
+public abstract class FieldElement : BaseElement
 {
-    public abstract class FieldElement : BaseElement
-    {
-    }
 }

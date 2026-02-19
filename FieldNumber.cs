@@ -1,44 +1,43 @@
 using System;
 using System.Collections.Generic;
 
-namespace Diagraph.Labelparser.ZPL
+namespace Diagraph.Labelparser.ZPL;
+
+public class FieldNumber : FieldElement
 {
-    public class FieldNumber : FieldElement
+    private static FieldNumber _currentPosition;
+    private readonly string properties;
+    private byte[] elementBytes;
+
+    public FieldNumber(string properties, byte[] elementBytes)
     {
-        private static FieldNumber _currentPosition;
-        private readonly string properties;
-        private byte[] elementBytes;
+        Base = typeof(FieldElement);
+        this.properties = properties.Replace(Environment.NewLine, "");
+        this.elementBytes = elementBytes;
 
-        public FieldNumber(string properties, byte[] elementBytes)
-        {
-            Base = typeof(FieldElement);
-            this.properties = properties.Replace(Environment.NewLine, "");
-            this.elementBytes = elementBytes;
+        Current = this;
+        Number = Convert.ToInt32(this.properties.Split(',')[0]);
+    }
 
-            Current = this;
-            Number = Convert.ToInt32(this.properties.Split(',')[0]);
-        }
+    public FieldNumber(int number = 0)
+    {
+        Base = typeof(FieldElement);
+        Number = number;
+    }
 
-        public FieldNumber(int number = 0)
-        {
-            Base = typeof(FieldElement);
-            Number = number;
-        }
+    public static FieldNumber Current
+    {
+        get => _currentPosition ?? (_currentPosition = new FieldNumber());
+        set => _currentPosition = value;
+    }
 
-        public static FieldNumber Current
-        {
-            get => _currentPosition ?? (_currentPosition = new FieldNumber());
-            set => _currentPosition = value;
-        }
+    public int Number { get; protected set; }
 
-        public int Number { get; protected set; }
-
-        public override IEnumerable<string> Render(ZPLRenderOptions context)
-        {
-            //^FN0
-            var result = new List<string>();
-            result.Add("^FN" + Number);
-            return result;
-        }
+    public override IEnumerable<string> Render(ZPLRenderOptions context)
+    {
+        //^FN0
+        var result = new List<string>();
+        result.Add("^FN" + Number);
+        return result;
     }
 }
