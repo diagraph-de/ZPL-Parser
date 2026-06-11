@@ -1,158 +1,86 @@
-# 📦 ZPL-Parser
+# ZPL-Parser
 
-A C# parser and renderer for Zebra Programming Language (ZPL)
+`ZPL-Parser` is a C# library for parsing and rebuilding Zebra Programming Language labels.
+The repository also includes a WinForms demo that exercises the parser and shows a live local preview on the right side while you edit ZPL on the left.
 
-This project provides a complete .NET library for parsing, analyzing, rendering, and processing ZPL labels (Zebra Label Format).
-It supports common ZPL commands, barcodes, graphics, text objects, font handling, and offers a modular, extensible architecture.
+## What is included
 
----
+- `Labelparser-ZPL.csproj` — core parser, ZPL object model, and preview renderer helper
+- `Demo/ZPLParser.Demo.WinForms.csproj` — WinForms demo that consumes the core library
+- `ZPL-Parser.sln` — solution containing both projects
+- `ZPLIIcommandreference.pdf` — Zebra command reference shipped with the repo
 
-## 🚀 Features
+## Demo app
 
-- Parsing & tokenizing ZPL label files
-- Support for ZPL elements such as:
-  - **Text fields** (`^A`, `^FB`, `^FD`, …)
-  - **1D/2D barcodes** (`^BC`, `^B3`, `^B7`, `^BQ`, …)
-  - **Graphics & recall graphics** (`^GF`, `~DG`)
-  - **Format structures** (`^XA`, `^XZ`)
-  - **Field positions & origins** (`^FO`, `^FT`)
-- Internal engine:
-  - `ZplParser` — Converts ZPL commands into structured objects  
-  - `ZPLEngine` — Prepares objects for rendering/export
-- Rendering support:
-  - `ZPLRenderOptions` for DPI, label size, scaling
-  - Foundation for bitmap rendering (partial implementation included)
-- Clean object-oriented architecture built around `BaseElement`
-- Extensible — new ZPL commands can be added easily
-- Example code & test files included
+The demo UI shows:
 
----
+- live ZPL input on the left
+- rendered preview on the right
+- normalized ZPL output
+- parser tree
+- parsed element list
+- preview zoom and fit controls
+- quick sample loading and file opening
 
-## 📁 Project Structure
+It includes sample buttons for:
 
-```
-ZPL-Parser/
-│
-├── Barcode1D.cs
-├── Barcode2D.cs
-├── BarcodeCode128.cs
-├── BarcodeCode39.cs
-├── BarcodeQR.cs
-├── BarcodeDatamatrix.cs
-│
-├── BaseElement.cs
-├── BaseFontIdentifier.cs
-├── BaseReferenceGrid.cs
-├── BaseRaw.cs
-│
-├── TextField.cs
-├── TextBlock.cs
-├── SingleLineFieldBlock.cs
-│
-├── ScalableBitmappedFont.cs
-├── RecallGraphic.cs
-├── DownloadGraphic.cs
-│
-├── ZplParser.cs
-├── ZPLEngine.cs
-├── ZPLConstants.cs
-├── ZPLRenderOptions.cs
-│
-├── etc/                → Fonts, resources
-├── Properties/
-│
-├── ZPLIIcommandreference.pdf
-└── Test.cs (demo / examples)
+- a mixed label with text, boxes, barcodes, and graphics
+- a graphics-focused sample with `^GF`, `~DG`, and `^XG`
+- a barcode-focused sample
+
+The preview renderer lives in the core project so the demo only applies the parser results and the rendered bitmap.
+Barcode rendering now uses a real barcode engine in the core project, including GS1-aware Code 128 and matrix code support.
+
+## Current parser coverage
+
+The parser currently recognizes the commands implemented in the codebase, including:
+
+- label framing and layout commands such as `^XA`, `^XZ`, `^PW`, `^LL`, `^LH`, `^LT`, `^LS`, `^LR`, `^MM`, `^PQ`
+- text and field commands such as `^FO`, `^FT`, `^FD`, `^FS`, `^FB`, `^TB`, `^FH`, `^FR`, `^FV`, `^FP`, `^FC`, `^FN`
+- fonts and international encoding helpers such as `^A*`, `^CF`, `^CI`
+- graphics and image commands such as `^GB`, `^GC`, `^GD`, `^GE`, `^GF`, `~DG`, `^XG`, `^GS`
+- barcodes such as `^B3`, `^BC`, `^BK`, `^BQ`, `^BX`, `^BY`
+- comments via `^FX`
+
+The demo preview renders the supported commands visually and keeps the preview canvas at the real label scale so the label does not collapse into a tiny thumbnail.
+
+## Build
+
+Open `ZPL-Parser.sln` in Visual Studio.  
+For command-line builds, use the project files directly:
+
+```powershell
+dotnet build Labelparser-ZPL.csproj -c Debug
+dotnet build Demo/ZPLParser.Demo.WinForms.csproj -c Debug
 ```
 
----
+If you want the demo as the startup app, set `ZPLParser.Demo.WinForms` as the startup project.
 
-## 🔧 Installation
+## Run the demo
 
-This project is a standalone C#/.NET library.
-Simply include it in your existing solution.
-
-### Using .NET CLI
-
-```bash
-git clone https://github.com/<user>/ZPL-Parser.git
-cd ZPL-Parser
+```powershell
+dotnet run --project Demo/ZPLParser.Demo.WinForms.csproj
 ```
 
-To reference it in another project:
+In the preview tab you can switch between fit-to-window and fixed zoom levels.
+The preview is local and driven by the same parser data the demo displays in the tree and element tabs.
 
-```bash
-dotnet add reference <path-to-project>
-```
-
----
-
-## 🧩 Example: Parsing ZPL
+## Example usage
 
 ```csharp
-var zpl = "^XA^FO50,50^A0N,50,50^FDHello World^FS^XZ";
+using Diagraph.Labelparser.ZPL;
 
-var parser = new ZplParser(zpl);
-var elements = parser.Parse();
+var parser = new ZplParser(System.Text.Encoding.UTF8.GetBytes("^XA^FO50,50^A0N,40,40^FDHello^FS^XZ"));
+var elements = parser.Elements;
 
-foreach (var el in elements)
+var normalized = new ZPLEngine(elements).ToZPLString(new ZPLRenderOptions
 {
-    Console.WriteLine(el.GetType().Name);
-}
+    DisplayComments = true
+});
 ```
 
----
+## Notes
 
-## 🖨️ Example: Preparing a Rendered Output
-
-```csharp
-var engine = new ZPLEngine(elements);
-var renderOptions = new ZPLRenderOptions
-{
-    DPI = 203,
-    LabelWidth = 800,
-    LabelHeight = 600
-};
-
-var result = engine.Process(renderOptions);
-// Result can be used for rendering
-```
-
----
-
-## 🎯 Target Audience
-
-- Developers working with ZPL in C#/.NET  
-- Label design and printing software providers  
-- Tools for previewing, analyzing, and validating Zebra labels  
-- Systems converting ZPL into images or other formats  
-
----
-
-## 📚 Documentation
-
-The project includes:
-
-```
-ZPLIIcommandreference.pdf
-```
-
-This is the official reference for Zebra Programming Language (ZPL II),
-useful for extending or validating the implementation.
-
----
-
-## 🧪 Tests & Examples
-
-The file `Test.cs` demonstrates basic usage of parser and engine.
-Sample ZPL input can be modified directly within the project for testing.
-
----
-
-## 🔮 Planned Enhancements
-
-- Complete bitmap renderer (`System.Drawing`)
-- PDF export
-- Extended support for nested field blocks
-- Full unit test suite
-- Publish as NuGet package
+- The core library targets .NET Framework 4.8.
+- `Test.cs` contains example snippets rather than an automated test suite.
+- The solution builds successfully with the demo project and the renderer helper now lives in the core library.

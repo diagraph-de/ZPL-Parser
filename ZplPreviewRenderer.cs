@@ -1,0 +1,792 @@
+#nullable enable
+
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Drawing.Text;
+using System.Linq;
+using System.Text;
+using ZXing;
+using ZXing.Common;
+using ZXing.Datamatrix.Encoder;
+using ZXing.QrCode.Internal;
+
+namespace Diagraph.Labelparser.ZPL;
+
+public sealed class ZplPreviewRenderer
+{
+    private const int DefaultCanvasWidth = 800;
+    private const int DefaultCanvasHeight = 600;
+    private const int Margin = 24;
+
+    public PreviewRenderResult Render(string zpl)
+    {
+        var result = new PreviewRenderResult();
+        var input = zpl ?? string.Empty;
+        var parser = new ZplParser(Encoding.UTF8.GetBytes(input));
+        var elements = parser.Elements ?? new List<BaseElement>();
+        var warnings = new List<string>();
+
+        result.Tree = parser.GetTree();
+        result.Elements.AddRange(elements.Select(CreateElementInfo));
+
+        var renderOptions = new ZPLRenderOptions
+        {
+            DisplayComments = true,
+            AddEmptyLineBeforeElementStart = false,
+            CompressedRendering = false
+        };
+
+        try
+        {
+            result.NormalizedZpl = new ZPLEngine(elements).ToZPLString(renderOptions);
+        }
+        catch (Exception ex)
+        {
+            result.NormalizedZpl = input;
+            result.Error = ex.Message;
+        }
+
+        try
+        {
+            result.PreviewBitmap = RenderBitmap(elements, parser.Error, warnings, out var width, out var height);
+            result.CanvasWidth = width;
+            result.CanvasHeight = height;
+            if (!string.IsNullOrWhiteSpace(parser.Error))
+                warnings.Add(parser.Error);
+            if (warnings.Count > 0)
+                result.Error = string.Join(Environment.NewLine, warnings.Distinct());
+        }
+        catch (Exception ex)
+        {
+            result.Error = string.IsNullOrWhiteSpace(result.Error)
+                ? ex.Message
+                : result.Error + Environment.NewLine + ex.Message;
+            result.PreviewBitmap = CreateFallbackBitmap(result.Error);
+            result.CanvasWidth = result.PreviewBitmap.Width;
+            result.CanvasHeight = result.PreviewBitmap.Height;
+        }
+
+        return result;
+    }
+
+    private static PreviewElementInfo CreateElementInfo(BaseElement element)
+    {
+        var summary = element.RenderToString();
+        if (summary.Length > 120)
+            summary = summary.Substring(0, 117) + "...";
+
+        return new PreviewElementInfo
+        {
+            Type = element.GetType().Name,
+            Id = element.Id,
+            Summary = summary
+        };
+    }
+
+    private static Bitmap CreateFallbackBitmap(string message)
+    {
+        var bitmap = new Bitmap(DefaultCanvasWidth, DefaultCanvasHeight);
+        using var graphics = Graphics.FromImage(bitmap);
+        graphics.Clear(Color.WhiteSmoke);
+        using var pen = new Pen(Color.DarkRed, 2);
+        graphics.DrawRectangle(pen, 12, 12, bitmap.Width - 24, bitmap.Height - 24);
+        using var brush = new SolidBrush(Color.DarkRed);
+        using var font = new Font("Segoe UI", 11, FontStyle.Bold, GraphicsUnit.Point);
+        graphics.DrawString(message, font, brush, new RectangleF(24, 24, bitmap.Width - 48, bitmap.Height - 48));
+        return bitmap;
+    }
+
+    private static Bitmap RenderBitmap(IReadOnlyList<BaseElement> elements, string parserError, List<string> warnings,
+        out int width, out int height)
+    {
+        var labelWidth = elements.OfType<PrintWidth>().LastOrDefault()?.Width ?? 0;
+        var labelHeight = elements.OfType<LabelLength>().LastOrDefault()?.Length ?? 0;
+        var home = elements.OfType<LabelHome>().LastOrDefault();
+        var top = elements.OfType<LabelTop>().LastOrDefault();
+        var shift = elements.OfType<LabelShfit>().LastOrDefault();
+        var reverse = elements.OfType<LabelReverse>().LastOrDefault();
+
+        var offsetX = (home?.PositionX ?? 0) + (shift?.ShiftLeft ?? 0);
+        var offsetY = (home?.PositionY ?? 0) + (top?.Top ?? 0);
+        var reverseColors = reverse?.Reverse == Enums.YesNo.Y;
+
+        var storedGraphics = new Dictionary<string, Image>(StringComparer.OrdinalIgnoreCase);
+        var estimatedBounds = new List<Rectangle>();
+
+        foreach (var element in elements)
+        {
+            if (element is DownloadGraphic downloadGraphic && downloadGraphic.Image != null)
+                storedGraphics[GraphicKey(downloadGraphic.DestinationDevice, downloadGraphic.ImageName,
+                    downloadGraphic.FileNameExtension)] = downloadGraphic.Image;
+
+            estimatedBounds.Add(EstimateBounds(element, offsetX, offsetY));
+        }
+
+        width = Math.Max(labelWidth + Math.Abs(offsetX) + Margin * 2,
+            Math.Max(DefaultCanvasWidth,
+                estimatedBounds.Count == 0 ? DefaultCanvasWidth : estimatedBounds.Max(b => b.Right) + Margin));
+        height = Math.Max(labelHeight + Math.Abs(offsetY) + Margin * 2,
+            Math.Max(DefaultCanvasHeight,
+                estimatedBounds.Count == 0 ? DefaultCanvasHeight : estimatedBounds.Max(b => b.Bottom) + Margin));
+
+        var bitmap = new Bitmap(width, height);
+        using (var graphics = Graphics.FromImage(bitmap))
+        {
+            graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            graphics.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+            graphics.Clear(reverseColors ? Color.Black : Color.White);
+
+            var renderState = new RenderState
+            {
+                OffsetX = offsetX,
+                OffsetY = offsetY,
+                Foreground = reverseColors ? Color.White : Color.Black,
+                Background = reverseColors ? Color.Black : Color.White
+            };
+
+            foreach (var element in elements)
+            {
+                try
+                {
+                    DrawElement(graphics, element, renderState, storedGraphics, warnings);
+                }
+                catch (Exception ex)
+                {
+                    warnings.Add($"{element.GetType().Name}: {ex.Message}");
+                }
+            }
+        }
+
+        return bitmap;
+    }
+
+    private static Rectangle EstimateBounds(BaseElement element, int offsetX, int offsetY)
+    {
+        switch (element)
+        {
+            case GraphicDiagonalLine graphicDiagonalLine:
+                return Rect(graphicDiagonalLine.Origin, offsetX, offsetY, graphicDiagonalLine.Width,
+                    graphicDiagonalLine.Height);
+            case GraphicEllipse graphicEllipse:
+                return Rect(graphicEllipse.Origin, offsetX, offsetY, graphicEllipse.Width, graphicEllipse.Height);
+            case GraphicCircle graphicCircle:
+                return Rect(graphicCircle.Origin, offsetX, offsetY, graphicCircle.Diameter, graphicCircle.Diameter);
+            case GraphicBox graphicBox:
+                return Rect(graphicBox.Origin, offsetX, offsetY,
+                    graphicBox.Width, graphicBox.Height);
+            case GraphicSymbol graphicSymbol:
+                return Rect(graphicSymbol.Origin, offsetX, offsetY, graphicSymbol.Width, graphicSymbol.Height);
+            case BarcodeQR barcodeQR:
+                return Rect(barcodeQR.Origin, offsetX, offsetY, 140 + barcodeQR.MagnificationFactor * 6,
+                    140 + barcodeQR.MagnificationFactor * 6);
+            case BarcodeDatamatrix dataMatrix:
+                return Rect(dataMatrix.Origin, offsetX, offsetY, 140, 140);
+            case BarcodeCode39 barcodeCode39:
+                return Rect(barcodeCode39.Origin, offsetX, offsetY,
+                    EstimateBarcodeWidth(barcodeCode39.Content, 13, 20), barcodeCode39.Height + 42);
+            case BarcodeCode128 barcodeCode128:
+                return Rect(barcodeCode128.Origin, offsetX, offsetY,
+                    EstimateBarcodeWidth(barcodeCode128.Content, 14, 40), barcodeCode128.Height + 42);
+            case BarcodeAnsiCodabar barcodeAnsiCodabar:
+                return Rect(barcodeAnsiCodabar.Origin, offsetX, offsetY,
+                    EstimateBarcodeWidth(barcodeAnsiCodabar.Content, 13, 20), barcodeAnsiCodabar.Height + 42);
+            case GraphicField graphicField:
+                return graphicField.Bitmap == null
+                    ? Rect(graphicField.Origin, offsetX, offsetY, 120, 80)
+                    : Rect(graphicField.Origin, offsetX, offsetY, graphicField.Bitmap.Width,
+                        graphicField.Bitmap.Height);
+            case RecallGraphic recallGraphic:
+                return Rect(recallGraphic.Origin, offsetX, offsetY, 120, 80);
+            case DownloadGraphic downloadGraphic:
+                return downloadGraphic.Image == null
+                    ? new Rectangle(offsetX + 20, offsetY + 20, 120, 80)
+                    : new Rectangle(offsetX + 20, offsetY + 20, downloadGraphic.Image.Width,
+                        downloadGraphic.Image.Height);
+            case SingleLineFieldBlock singleLineFieldBlock:
+                return Rect(singleLineFieldBlock.Origin, offsetX, offsetY, singleLineFieldBlock.Width,
+                    Math.Max(singleLineFieldBlock.Font?.FontHeight ?? 24, 32));
+            case FieldBlock fieldBlock:
+                return Rect(fieldBlock.Origin, offsetX, offsetY, fieldBlock.Width,
+                    Math.Max(fieldBlock.Font?.FontHeight ?? 24, 32) * Math.Max(1, fieldBlock.MaxNumberOfLines));
+            case TextBlock textBlock:
+                return Rect(textBlock.Origin, offsetX, offsetY, textBlock.Width, textBlock.Height);
+            case TextField textField:
+                return Rect(textField.Origin, offsetX, offsetY,
+                    EstimateTextWidth(textField.Text, textField.Font),
+                    Math.Max(textField.Font?.FontHeight ?? 24, 32));
+            default:
+                return new Rectangle(offsetX + 10, offsetY + 10, 10, 10);
+        }
+    }
+
+    private static Rectangle Rect(FieldOrigin origin, int offsetX, int offsetY, int width, int height)
+    {
+        var x = (origin?.PositionX ?? 0) + offsetX;
+        var y = (origin?.PositionY ?? 0) + offsetY;
+        return new Rectangle(x, y, Math.Max(1, width), Math.Max(1, height));
+    }
+
+    private static void DrawElement(Graphics graphics, BaseElement element, RenderState state,
+        IReadOnlyDictionary<string, Image> storedGraphics, List<string> warnings)
+    {
+        switch (element)
+        {
+            case GraphicDiagonalLine graphicDiagonalLine:
+                DrawDiagonal(graphics, graphicDiagonalLine, state);
+                break;
+            case GraphicEllipse graphicEllipse:
+                DrawEllipse(graphics, graphicEllipse.Origin, state, graphicEllipse.Width, graphicEllipse.Height,
+                    graphicEllipse.BorderThickness);
+                break;
+            case GraphicCircle graphicCircle:
+                DrawEllipse(graphics, graphicCircle.Origin, state, graphicCircle.Diameter, graphicCircle.Diameter,
+                    graphicCircle.BorderThickness);
+                break;
+            case GraphicBox graphicBox:
+                DrawBox(graphics, graphicBox.Origin, state, graphicBox.Width, graphicBox.Height,
+                    graphicBox.BorderThickness,
+                    graphicBox.LineColor);
+                break;
+            case GraphicSymbol graphicSymbol:
+                DrawSymbol(graphics, graphicSymbol, state);
+                break;
+            case SingleLineFieldBlock singleLineFieldBlock:
+                DrawTextBlock(graphics, singleLineFieldBlock, state, true);
+                break;
+            case FieldBlock fieldBlock:
+                DrawTextBlock(graphics, fieldBlock, state);
+                break;
+            case TextBlock textBlock:
+                DrawTextBlock(graphics, textBlock, state);
+                break;
+            case BarcodeCode39 barcodeCode39:
+                DrawCode39(graphics, barcodeCode39, state, warnings);
+                break;
+            case BarcodeCode128 barcodeCode128:
+                DrawCode128(graphics, barcodeCode128, state, warnings);
+                break;
+            case BarcodeAnsiCodabar barcodeAnsiCodabar:
+                DrawCodabar(graphics, barcodeAnsiCodabar, state, warnings);
+                break;
+            case BarcodeQR barcodeQR:
+                DrawQrCode(graphics, barcodeQR, state, warnings);
+                break;
+            case BarcodeDatamatrix barcodeDatamatrix:
+                DrawDataMatrix(graphics, barcodeDatamatrix, state, warnings);
+                break;
+            case GraphicField graphicField:
+                DrawImage(graphics, graphicField.Origin, state, graphicField.Bitmap,
+                    graphicField.Bitmap?.Width ?? 120, graphicField.Bitmap?.Height ?? 80);
+                break;
+            case DownloadGraphic downloadGraphic:
+                DrawImage(graphics, null, state, downloadGraphic.Image, downloadGraphic.Image?.Width ?? 120,
+                    downloadGraphic.Image?.Height ?? 80);
+                break;
+            case RecallGraphic recallGraphic:
+            {
+                var key = GraphicKey(recallGraphic.StorageDevice, recallGraphic.ImageName, recallGraphic.Extension);
+                storedGraphics.TryGetValue(key, out var image);
+                DrawImage(graphics, recallGraphic.Origin, state, image, image?.Width ?? 120, image?.Height ?? 80);
+                break;
+            }
+            case BarcodeFieldDefault barcodeFieldDefault:
+                state.BarcodeDefaults = barcodeFieldDefault;
+                break;
+            case FieldReversePrint:
+                state.ReverseField = true;
+                break;
+            case FieldSeparator:
+                state.ReverseField = false;
+                break;
+            case TextField textField:
+                DrawTextField(graphics, textField, state, state.ReverseField || textField.ReversePrint);
+                break;
+        }
+    }
+
+    private static void DrawTextField(Graphics graphics, TextField textField, RenderState state, bool reverse,
+        Rectangle? overrideBounds = null)
+    {
+        var origin = textField.Origin;
+        var x = state.OffsetX + (origin?.PositionX ?? 0);
+        var y = state.OffsetY + (origin?.PositionY ?? 0);
+        var rect = overrideBounds ?? new Rectangle(x, y, EstimateTextWidth(textField.Text, textField.Font),
+            Math.Max(24, textField.Font?.FontHeight ?? 24));
+        using var backBrush = new SolidBrush(reverse ? state.Foreground : state.Background);
+        using var foreBrush = new SolidBrush(reverse ? state.Background : state.Foreground);
+        graphics.FillRectangle(backBrush, rect);
+
+        using var font = CreateFont(textField.Font, textField.Font?.FontName != "A");
+        var format = StringFormat.GenericTypographic;
+        format.FormatFlags |= StringFormatFlags.NoClip;
+        graphics.DrawString(textField.Text ?? string.Empty, font, foreBrush, rect, format);
+    }
+
+    private static void DrawTextBlock(Graphics graphics, TextField field, RenderState state, bool singleLine = false)
+    {
+        var origin = field.Origin;
+        var x = state.OffsetX + (origin?.PositionX ?? 0);
+        var y = state.OffsetY + (origin?.PositionY ?? 0);
+
+        var width = 260;
+        var height = 80;
+        switch (field)
+        {
+            case SingleLineFieldBlock singleLineFieldBlock:
+                width = singleLineFieldBlock.Width;
+                height = Math.Max(singleLineFieldBlock.Font?.FontHeight ?? 24, 32);
+                break;
+            case FieldBlock fieldBlock:
+                width = fieldBlock.Width;
+                height = Math.Max(fieldBlock.MaxNumberOfLines * Math.Max(fieldBlock.Font?.FontHeight ?? 24, 24), 32);
+                break;
+            case TextBlock textBlock:
+                width = textBlock.Width;
+                height = textBlock.Height;
+                break;
+        }
+
+        var rect = new Rectangle(x, y, Math.Max(1, width), Math.Max(1, height));
+        var reverse = state.ReverseField || field.ReversePrint;
+        using var backgroundBrush = new SolidBrush(reverse ? state.Foreground : state.Background);
+        graphics.FillRectangle(backgroundBrush, rect);
+        using var font = CreateFont(field.Font, field.Font?.FontName != "A");
+        using var brush = new SolidBrush(reverse ? state.Background : state.Foreground);
+        using var format = new StringFormat
+        {
+            Trimming = StringTrimming.None
+        };
+
+        if (singleLine)
+            format.FormatFlags |= StringFormatFlags.NoWrap;
+        else
+            format.FormatFlags |= StringFormatFlags.LineLimit;
+
+        graphics.DrawString(field.Text ?? string.Empty, font, brush, rect, format);
+    }
+
+    private static void DrawBox(Graphics graphics, FieldOrigin? origin, RenderState state, int width, int height,
+        int borderThickness, Enums.BlackWhite lineColor)
+    {
+        var rect = new Rectangle(state.OffsetX + (origin?.PositionX ?? 0), state.OffsetY + (origin?.PositionY ?? 0),
+            Math.Max(1, width), Math.Max(1, height));
+        using var pen = new Pen(lineColor == Enums.BlackWhite.B ? state.Foreground : state.Background,
+            Math.Max(1, borderThickness));
+        graphics.DrawRectangle(pen, rect);
+    }
+
+    private static void DrawEllipse(Graphics graphics, FieldOrigin? origin, RenderState state, int width, int height,
+        int borderThickness)
+    {
+        var rect = new Rectangle(state.OffsetX + (origin?.PositionX ?? 0), state.OffsetY + (origin?.PositionY ?? 0),
+            Math.Max(1, width), Math.Max(1, height));
+        using var pen = new Pen(state.Foreground, Math.Max(1, borderThickness));
+        graphics.DrawEllipse(pen, rect);
+    }
+
+    private static void DrawDiagonal(Graphics graphics, GraphicDiagonalLine line, RenderState state)
+    {
+        var rect = new Rectangle(state.OffsetX + (line.Origin?.PositionX ?? 0),
+            state.OffsetY + (line.Origin?.PositionY ?? 0),
+            Math.Max(1, line.Width), Math.Max(1, line.Height));
+        using var pen = new Pen(state.Foreground, Math.Max(1, line.BorderThickness));
+        graphics.DrawLine(pen,
+            line.RightLeaningiagonal ? rect.Left : rect.Left, line.RightLeaningiagonal ? rect.Bottom : rect.Top,
+            line.RightLeaningiagonal ? rect.Right : rect.Right, line.RightLeaningiagonal ? rect.Top : rect.Bottom);
+    }
+
+    private static void DrawSymbol(Graphics graphics, GraphicSymbol symbol, RenderState state)
+    {
+        var rect = new Rectangle(state.OffsetX + (symbol.Origin?.PositionX ?? 0),
+            state.OffsetY + (symbol.Origin?.PositionY ?? 0),
+            Math.Max(1, symbol.Width), Math.Max(1, symbol.Height));
+        using var pen = new Pen(state.Foreground, 2);
+        graphics.DrawEllipse(pen, rect);
+        using var font = new Font("Segoe UI Symbol", Math.Max(8, rect.Height / 2), FontStyle.Bold, GraphicsUnit.Pixel);
+        using var brush = new SolidBrush(state.Foreground);
+        graphics.DrawString(symbol.Character.ToString().Substring(0, 1), font, brush, rect,
+            StringFormat.GenericDefault);
+    }
+
+    private static void DrawCode39(Graphics graphics, BarcodeCode39 barcode, RenderState state, List<string> warnings)
+    {
+        var barcodeDefaults = state.BarcodeDefaults ?? BarcodeFieldDefault.Current;
+        var content = ApplyCode39Checksum(barcode.Content ?? string.Empty, barcode.Mod43CheckDigit);
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            warnings.Add("Code39 barcode skipped because content is empty.");
+            return;
+        }
+        var moduleWidth = Math.Max(1, barcodeDefaults?.ModuleWidth ?? 2);
+        var barHeight = Math.Max(1, barcode.Height > 0 ? barcode.Height : barcodeDefaults?.Height ?? 10);
+        var foreground = state.ReverseField ? state.Background : state.Foreground;
+        var background = state.ReverseField ? state.Foreground : state.Background;
+        using var bitmap = CreateLinearBarcodeBitmap(
+            BarcodeFormat.CODE_39,
+            content,
+            moduleWidth,
+            barHeight,
+            barcode.PrintInterpretationLine,
+            barcode.PrintInterpretationLineAboveCode,
+            foreground,
+            background,
+            10,
+            false,
+            false);
+        ApplyOrientation(bitmap, barcode.Orientation);
+        DrawBitmap(graphics, barcode.Origin, state, bitmap);
+    }
+
+    private static void DrawCode128(Graphics graphics, BarcodeCode128 barcode, RenderState state, List<string> warnings)
+    {
+        var barcodeDefaults = state.BarcodeDefaults ?? BarcodeFieldDefault.Current;
+        if (string.IsNullOrWhiteSpace(barcode.Content))
+        {
+            warnings.Add("Code128 barcode skipped because content is empty.");
+            return;
+        }
+        var moduleWidth = Math.Max(1, barcodeDefaults?.ModuleWidth ?? 2);
+        var barHeight = Math.Max(1, barcode.Height > 0 ? barcode.Height : barcodeDefaults?.Height ?? 10);
+        var foreground = state.ReverseField ? state.Background : state.Foreground;
+        var background = state.ReverseField ? state.Foreground : state.Background;
+        using var bitmap = CreateLinearBarcodeBitmap(
+            BarcodeFormat.CODE_128,
+            barcode.Content ?? string.Empty,
+            moduleWidth,
+            barHeight,
+            barcode.PrintInterpretationLine,
+            barcode.PrintInterpretationLineAboveCode,
+            foreground,
+            background,
+            10,
+            barcode.UCCCheckDigit == Enums.YesNo.Y,
+            false);
+        ApplyOrientation(bitmap, barcode.Orientation);
+        DrawBitmap(graphics, barcode.Origin, state, bitmap);
+    }
+
+    private static void DrawCodabar(Graphics graphics, BarcodeAnsiCodabar barcode, RenderState state, List<string> warnings)
+    {
+        var barcodeDefaults = state.BarcodeDefaults ?? BarcodeFieldDefault.Current;
+        var moduleWidth = Math.Max(1, barcodeDefaults?.ModuleWidth ?? 2);
+        var barHeight = Math.Max(1, barcode.Height > 0 ? barcode.Height : barcodeDefaults?.Height ?? 10);
+        var content = ApplyCodabarChecksum(barcode.Content ?? string.Empty, barcode.CheckDigit);
+        content =
+            $"{char.ToUpperInvariant(barcode.StartCharacter)}{content}{char.ToUpperInvariant(barcode.StopCharacter)}";
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            warnings.Add("Codabar barcode skipped because content is empty.");
+            return;
+        }
+        var foreground = state.ReverseField ? state.Background : state.Foreground;
+        var background = state.ReverseField ? state.Foreground : state.Background;
+
+        using var bitmap = CreateLinearBarcodeBitmap(
+            BarcodeFormat.CODABAR,
+            content,
+            moduleWidth,
+            barHeight,
+            barcode.PrintInterpretationLine,
+            barcode.PrintInterpretationLineAboveCode,
+            foreground,
+            background,
+            10,
+            false,
+            false);
+        ApplyOrientation(bitmap, barcode.Orientation);
+        DrawBitmap(graphics, barcode.Origin, state, bitmap);
+    }
+
+    private static void DrawQrCode(Graphics graphics, BarcodeQR barcode, RenderState state, List<string> warnings)
+    {
+        if (string.IsNullOrWhiteSpace(barcode.Content))
+        {
+            warnings.Add("QR code skipped because content is empty.");
+            return;
+        }
+        var scale = Math.Max(1, barcode.MagnificationFactor);
+        var foreground = state.ReverseField ? state.Background : state.Foreground;
+        var background = state.ReverseField ? state.Foreground : state.Background;
+        var hints = new Dictionary<EncodeHintType, object>
+        {
+            [EncodeHintType.MARGIN] = 4,
+            [EncodeHintType.PURE_BARCODE] = true,
+            [EncodeHintType.ERROR_CORRECTION] = MapQrErrorCorrection(barcode.ErrorCorrection)
+        };
+
+        if (IsGs1Payload(barcode.Content))
+            hints[EncodeHintType.GS1_FORMAT] = true;
+
+        if (barcode.Model > 0)
+            hints[EncodeHintType.QR_VERSION] = barcode.Model;
+
+        using var bitmap = CreateMatrixBarcodeBitmap(BarcodeFormat.QR_CODE, barcode.Content ?? string.Empty, hints,
+            scale,
+            foreground, background);
+        ApplyOrientation(bitmap, barcode.FieldPosition);
+        DrawBitmap(graphics, barcode.Origin, state, bitmap);
+    }
+
+    private static void DrawDataMatrix(Graphics graphics, BarcodeDatamatrix barcode, RenderState state, List<string> warnings)
+    {
+        if (string.IsNullOrWhiteSpace(barcode.Content))
+        {
+            warnings.Add("Data Matrix skipped because content is empty.");
+            return;
+        }
+        var scale = Math.Max(1, barcode.DMHeight);
+        var foreground = state.ReverseField ? state.Background : state.Foreground;
+        var background = state.ReverseField ? state.Foreground : state.Background;
+        var hints = new Dictionary<EncodeHintType, object>
+        {
+            [EncodeHintType.MARGIN] = 2,
+            [EncodeHintType.PURE_BARCODE] = true
+        };
+
+        if (IsGs1Payload(barcode.Content))
+            hints[EncodeHintType.GS1_FORMAT] = true;
+
+        if (barcode.Cols > 0 && barcode.Rows > 0)
+        {
+            var size = new Dimension(barcode.Cols, barcode.Rows);
+            hints[EncodeHintType.MIN_SIZE] = size;
+            hints[EncodeHintType.MAX_SIZE] = size;
+        }
+
+        if (barcode.Cols > 0 && barcode.Rows <= 0)
+            hints[EncodeHintType.DATA_MATRIX_SHAPE] = SymbolShapeHint.FORCE_SQUARE;
+
+        if (barcode.FormatID > 0)
+            hints[EncodeHintType.DATA_MATRIX_DEFAULT_ENCODATION] = barcode.FormatID;
+
+        using var bitmap = CreateMatrixBarcodeBitmap(BarcodeFormat.DATA_MATRIX, barcode.Content ?? string.Empty, hints,
+            scale, foreground, background);
+        ApplyOrientation(bitmap, barcode.Orientation);
+        DrawBitmap(graphics, barcode.Origin, state, bitmap);
+    }
+
+    private static void DrawBitmap(Graphics graphics, FieldOrigin? origin, RenderState state, Bitmap bitmap)
+    {
+        var x = state.OffsetX + (origin?.PositionX ?? 0);
+        var y = state.OffsetY + (origin?.PositionY ?? 0);
+        graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
+        graphics.DrawImage(bitmap, new Rectangle(x, y, bitmap.Width, bitmap.Height));
+    }
+
+    private static void DrawImage(Graphics graphics, FieldOrigin? origin, RenderState state, Image? image, int width,
+        int height)
+    {
+        var x = state.OffsetX + (origin?.PositionX ?? 0);
+        var y = state.OffsetY + (origin?.PositionY ?? 0);
+        var rect = new Rectangle(x, y, Math.Max(1, width), Math.Max(1, height));
+        if (image != null)
+        {
+            graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
+            graphics.DrawImage(image, rect);
+        }
+    }
+
+    private static Font CreateFont(ScalableBitmappedFont? font, bool bold)
+    {
+        var size = Math.Max(8f, font?.FontHeight ?? 24f);
+        var family = string.Equals(font?.FontName, "A", StringComparison.OrdinalIgnoreCase)
+            ? "Consolas"
+            : "Arial";
+        return new Font(family, size, bold ? FontStyle.Bold : FontStyle.Regular, GraphicsUnit.Pixel);
+    }
+
+    private static int EstimateTextWidth(string? text, ScalableBitmappedFont? font)
+    {
+        var length = Math.Max(1, text?.Length ?? 1);
+        var baseWidth = Math.Max(8, font?.FontWidth ?? 16);
+        var factor = string.Equals(font?.FontName, "A", StringComparison.OrdinalIgnoreCase) ? baseWidth : baseWidth / 2;
+        return Math.Max(120, length * Math.Max(8, factor));
+    }
+
+    private static string ApplyCode39Checksum(string content, bool appendChecksum)
+    {
+        if (!appendChecksum)
+            return content;
+
+        const string alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. $/+%";
+        var sum = 0;
+        foreach (var character in content.ToUpperInvariant())
+        {
+            var index = alphabet.IndexOf(character);
+            if (index >= 0)
+                sum += index;
+        }
+
+        return content + alphabet[sum % 43];
+    }
+
+    private static string ApplyCodabarChecksum(string content, bool appendChecksum)
+    {
+        if (!appendChecksum)
+            return content;
+
+        const string alphabet = "0123456789-$:/.+ABCD";
+        var sum = 0;
+        foreach (var character in content.ToUpperInvariant())
+        {
+            var index = alphabet.IndexOf(character);
+            if (index >= 0)
+                sum += index;
+        }
+
+        return content + alphabet[sum % 16];
+    }
+
+    private static bool IsGs1Payload(string? content)
+    {
+        if (string.IsNullOrEmpty(content))
+            return false;
+
+        var payload = content ?? string.Empty;
+        return payload.IndexOf((char)29) >= 0 ||
+               payload.IndexOf("]C1", StringComparison.OrdinalIgnoreCase) >= 0 ||
+               payload.IndexOf("]Q3", StringComparison.OrdinalIgnoreCase) >= 0 ||
+               payload.IndexOf("]d2", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private static ErrorCorrectionLevel MapQrErrorCorrection(Enums.ErrorCorrection errorCorrection)
+    {
+        return errorCorrection switch
+        {
+            Enums.ErrorCorrection.H => ErrorCorrectionLevel.H,
+            Enums.ErrorCorrection.Q => ErrorCorrectionLevel.Q,
+            Enums.ErrorCorrection.M => ErrorCorrectionLevel.M,
+            _ => ErrorCorrectionLevel.L
+        };
+    }
+
+    private static int EstimateBarcodeWidth(string? content, int moduleWidth, int quietZone)
+    {
+        var length = Math.Max(1, content?.Length ?? 1);
+        return Math.Max(160, length * moduleWidth * 14 + quietZone * 2);
+    }
+
+    private static Bitmap CreateLinearBarcodeBitmap(BarcodeFormat format, string content, int moduleWidth,
+        int barHeight,
+        bool printInterpretationLine, bool printInterpretationLineAboveCode, Color foreground, Color background,
+        int marginModules, bool gs1Format, bool forceCodesetB)
+    {
+        var writer = new MultiFormatWriter();
+        var hints = new Dictionary<EncodeHintType, object>();
+        hints[EncodeHintType.PURE_BARCODE] = true;
+        hints[EncodeHintType.MARGIN] = marginModules;
+        if (gs1Format)
+            hints[EncodeHintType.GS1_FORMAT] = true;
+        if (forceCodesetB)
+            hints[EncodeHintType.CODE128_FORCE_CODESET_B] = true;
+
+        var matrix = writer.encode(content, format, 0, 0, hints);
+        var textHeight = printInterpretationLine ? Math.Max(20, barHeight / 4) : 0;
+        var textSpacing = printInterpretationLine ? 6 : 0;
+        var totalHeight = barHeight + textHeight + textSpacing;
+        var barcodeTop = printInterpretationLine && printInterpretationLineAboveCode
+            ? textHeight + textSpacing
+            : 0;
+        var textTop = printInterpretationLine && printInterpretationLineAboveCode
+            ? 0
+            : barHeight + textSpacing;
+
+        var bitmap = new Bitmap(Math.Max(1, matrix.Width * moduleWidth), Math.Max(1, totalHeight),
+            PixelFormat.Format24bppRgb);
+        using var graphics = Graphics.FromImage(bitmap);
+        graphics.Clear(background);
+        using var barBrush = new SolidBrush(foreground);
+
+        RenderMatrix(graphics, matrix, moduleWidth, barcodeTop, barHeight, barBrush);
+
+        if (printInterpretationLine && !string.IsNullOrEmpty(content))
+        {
+            using var font = new Font("Arial", Math.Max(10, textHeight - 4), FontStyle.Regular, GraphicsUnit.Pixel);
+            using var textBrush = new SolidBrush(foreground);
+            using var stringFormat = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
+
+            graphics.DrawString(content, font, textBrush,
+                new RectangleF(0, textTop, bitmap.Width, Math.Max(1, textHeight)), stringFormat);
+        }
+
+        return bitmap;
+    }
+
+    private static Bitmap CreateMatrixBarcodeBitmap(BarcodeFormat format, string content,
+        IDictionary<EncodeHintType, object> hints,
+        int scale, Color foreground, Color background)
+    {
+        var writer = new MultiFormatWriter();
+        var matrix = writer.encode(content, format, 0, 0, hints);
+        var bitmap = new Bitmap(Math.Max(1, matrix.Width * scale), Math.Max(1, matrix.Height * scale),
+            PixelFormat.Format24bppRgb);
+        using var graphics = Graphics.FromImage(bitmap);
+        graphics.Clear(background);
+        using var barBrush = new SolidBrush(foreground);
+        RenderMatrix(graphics, matrix, scale, 0, scale, barBrush);
+        return bitmap;
+    }
+
+    private static void RenderMatrix(Graphics graphics, BitMatrix matrix, int scale, int topOffset, int rowScale,
+        Brush brush)
+    {
+        for (var y = 0; y < matrix.Height; y++)
+        for (var x = 0; x < matrix.Width; x++)
+            if (matrix[x, y])
+                graphics.FillRectangle(brush, x * scale, topOffset + y * rowScale, scale, rowScale);
+    }
+
+    private static void ApplyOrientation(Bitmap bitmap, Enums.Orientation orientation)
+    {
+        switch (orientation)
+        {
+            case Enums.Orientation.R:
+                bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                break;
+            case Enums.Orientation.I:
+                bitmap.RotateFlip(RotateFlipType.Rotate180FlipNone);
+                break;
+            case Enums.Orientation.B:
+                bitmap.RotateFlip(RotateFlipType.Rotate270FlipNone);
+                break;
+        }
+    }
+
+    private static void ApplyOrientation(Bitmap bitmap, string orientation)
+    {
+        switch ((orientation ?? string.Empty).ToUpperInvariant())
+        {
+            case "R":
+                bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
+                break;
+            case "I":
+                bitmap.RotateFlip(RotateFlipType.Rotate180FlipNone);
+                break;
+            case "B":
+                bitmap.RotateFlip(RotateFlipType.Rotate270FlipNone);
+                break;
+        }
+    }
+
+    private static string GraphicKey(string storageDevice, string imageName, string extension)
+    {
+        return $"{storageDevice}|{imageName}|{extension}".ToUpperInvariant();
+    }
+
+    private sealed class RenderState
+    {
+        public int OffsetX { get; set; }
+        public int OffsetY { get; set; }
+        public Color Foreground { get; set; }
+        public Color Background { get; set; }
+        public BarcodeFieldDefault? BarcodeDefaults { get; set; }
+        public bool ReverseField { get; set; }
+    }
+}
