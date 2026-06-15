@@ -1,14 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
-	<PropertyGroup>
-		<OutputType>WinExe</OutputType>
-		<TargetFramework>net48</TargetFramework>
-		<UseWindowsForms>true</UseWindowsForms>
-		<Nullable>enable</Nullable>
-		<ImplicitUsings>disable</ImplicitUsings>
-		<LangVersion>latest</LangVersion>
-		<AssemblyName>ZPLParser.Demo.WinForms</AssemblyName>
-		<RootNamespace>ZPLParser.Demo</RootNamespace>
-	</PropertyGroup>
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>ZPLParser.Demo.WinForms</AssemblyName>
+    <RootNamespace>ZPLParser.Demo</RootNamespace>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+  </PropertyGroup>
   <ItemGroup Condition="'$(DesignTimeBuild)' != 'true'">
     <ProjectReference Include="..\Labelparser-ZPL.csproj" />
   </ItemGroup>

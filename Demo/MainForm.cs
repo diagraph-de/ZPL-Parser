@@ -34,6 +34,7 @@ internal sealed partial class MainForm : Form
         _overviewButton.Click += OverviewButton_Click;
         _graphicsButton.Click += GraphicsButton_Click;
         _barcodeMixButton.Click += BarcodeMixButton_Click;
+        _labelButton.Click += LabelButton_Click;
         _openZplButton.Click += OpenZplButton_Click;
         _refreshButton.Click += RefreshButton_Click;
         _copyZplButton.Click += CopyZplButton_Click;
@@ -151,6 +152,12 @@ internal sealed partial class MainForm : Form
         RefreshPreview();
     }
 
+    private void LabelButton_Click(object? sender, EventArgs e)
+    {
+        LoadSample(BuildReferenceLabelSample());
+        RefreshPreview();
+    }
+
     private void OpenZplButton_Click(object? sender, EventArgs e)
     {
         OpenZplFile();
@@ -210,7 +217,7 @@ internal sealed partial class MainForm : Form
             return;
 
         SelectZoom("100%");
-        LoadSample(BuildOverviewSample());
+        LoadSample(BuildReferenceLabelSample());
         RefreshPreview();
     }
 
@@ -321,6 +328,52 @@ internal sealed partial class MainForm : Form
 ^FO40,360^BQN,2,7^FDLA,https://openai.com^FS
 ^FO340,230^BXN,8,200,0,0,1,_,1^FD7,DATA-MATRIX^FS
 ^FO340,360^BKN,Y,80,Y,N,A,A^FD1234-ABCD^FS
+^XZ";
+    }
+
+    private static string BuildReferenceLabelSample()
+    {
+        return
+            @"^XA
+
+^FX Top section with logo, name and address.
+^CF0,60
+^FO50,50^GB100,100,100^FS
+^FO75,75^FR^GB100,100,100^FS
+^FO93,93^GB40,40,40^FS
+^FO220,50^FDIntershipping, Inc.^FS
+^CF0,30
+^FO220,115^FD1000 Shipping Lane^FS
+^FO220,155^FDShelbyville TN 38102^FS
+^FO220,195^FDUnited States (USA)^FS
+^FO50,250^GB700,3,3^FS
+
+^FX Second section with recipient address and permit information.
+^CFA,30
+^FO50,300^FDJohn Doe^FS
+^FO50,340^FD100 Main Street^FS
+^FO50,380^FDSpringfield TN 39021^FS
+^FO50,420^FDUnited States (USA)^FS
+^CFA,15
+^FO600,300^GB150,150,3^FS
+^FO638,340^FDPermit^FS
+^FO638,390^FD123456^FS
+^FO50,500^GB700,3,3^FS
+
+^FX Third section with bar code.
+^BY5,2,270
+^FO100,550^BC^FD12345678^FS
+
+^FX Fourth section (the two boxes on the bottom).
+^FO50,900^GB700,250,3^FS
+^FO400,900^GB3,250,3^FS
+^CF0,40
+^FO100,960^FDCtr. X34B-1^FS
+^FO100,1010^FDREF1 F00B47^FS
+^FO100,1060^FDREF2 BL4H8^FS
+^CF0,190
+^FO470,955^FDCA^FS
+
 ^XZ";
     }
 

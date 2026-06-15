@@ -7,6 +7,7 @@ partial class MainForm
     private System.Windows.Forms.Button _overviewButton = null!;
     private System.Windows.Forms.Button _graphicsButton = null!;
     private System.Windows.Forms.Button _barcodeMixButton = null!;
+    private System.Windows.Forms.Button _labelButton = null!;
     private System.Windows.Forms.Button _openZplButton = null!;
     private System.Windows.Forms.Button _refreshButton = null!;
     private System.Windows.Forms.Button _copyZplButton = null!;
@@ -36,6 +37,7 @@ partial class MainForm
         _overviewButton = new System.Windows.Forms.Button();
         _graphicsButton = new System.Windows.Forms.Button();
         _barcodeMixButton = new System.Windows.Forms.Button();
+        _labelButton = new System.Windows.Forms.Button();
         _openZplButton = new System.Windows.Forms.Button();
         _refreshButton = new System.Windows.Forms.Button();
         _copyZplButton = new System.Windows.Forms.Button();
@@ -107,6 +109,7 @@ partial class MainForm
         _leftToolbar.Controls.Add(_overviewButton);
         _leftToolbar.Controls.Add(_graphicsButton);
         _leftToolbar.Controls.Add(_barcodeMixButton);
+        _leftToolbar.Controls.Add(_labelButton);
         _leftToolbar.Controls.Add(_openZplButton);
         _leftToolbar.Controls.Add(_refreshButton);
         _leftToolbar.Controls.Add(_copyZplButton);
@@ -151,36 +154,47 @@ partial class MainForm
         _barcodeMixButton.TabStop = false;
         _barcodeMixButton.Text = "Barcode Mix";
         // 
+        // _labelButton
+        // 
+        _labelButton.AutoSize = true;
+        _labelButton.Location = new System.Drawing.Point(258, 6);
+        _labelButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
+        _labelButton.Name = "_labelButton";
+        _labelButton.Size = new System.Drawing.Size(75, 23);
+        _labelButton.TabIndex = 3;
+        _labelButton.TabStop = false;
+        _labelButton.Text = "Label";
+        // 
         // _openZplButton
         // 
         _openZplButton.AutoSize = true;
-        _openZplButton.Location = new System.Drawing.Point(258, 6);
+        _openZplButton.Location = new System.Drawing.Point(341, 6);
         _openZplButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
         _openZplButton.Name = "_openZplButton";
         _openZplButton.Size = new System.Drawing.Size(75, 23);
-        _openZplButton.TabIndex = 3;
+        _openZplButton.TabIndex = 4;
         _openZplButton.TabStop = false;
         _openZplButton.Text = "Open ZPL";
         // 
         // _refreshButton
         // 
         _refreshButton.AutoSize = true;
-        _refreshButton.Location = new System.Drawing.Point(341, 6);
+        _refreshButton.Location = new System.Drawing.Point(424, 6);
         _refreshButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
         _refreshButton.Name = "_refreshButton";
         _refreshButton.Size = new System.Drawing.Size(75, 23);
-        _refreshButton.TabIndex = 4;
+        _refreshButton.TabIndex = 5;
         _refreshButton.TabStop = false;
         _refreshButton.Text = "Refresh";
         // 
         // _copyZplButton
         // 
         _copyZplButton.AutoSize = true;
-        _copyZplButton.Location = new System.Drawing.Point(424, 6);
+        _copyZplButton.Location = new System.Drawing.Point(507, 6);
         _copyZplButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
         _copyZplButton.Name = "_copyZplButton";
         _copyZplButton.Size = new System.Drawing.Size(75, 23);
-        _copyZplButton.TabIndex = 5;
+        _copyZplButton.TabIndex = 6;
         _copyZplButton.TabStop = false;
         _copyZplButton.Text = "Copy ZPL";
         // 

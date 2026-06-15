@@ -8,6 +8,7 @@ using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 using ZXing;
 using ZXing.Common;
 using ZXing.Datamatrix.Encoder;
@@ -186,13 +187,13 @@ public sealed class ZplPreviewRenderer
                 return Rect(dataMatrix.Origin, offsetX, offsetY, 140, 140);
             case BarcodeCode39 barcodeCode39:
                 return Rect(barcodeCode39.Origin, offsetX, offsetY,
-                    EstimateBarcodeWidth(barcodeCode39.Content, 13, 20), barcodeCode39.Height + 42);
+                    EstimateBarcodeWidth(ResolveBarcodeContent(barcodeCode39), 13, 20), barcodeCode39.Height + 42);
             case BarcodeCode128 barcodeCode128:
                 return Rect(barcodeCode128.Origin, offsetX, offsetY,
-                    EstimateBarcodeWidth(barcodeCode128.Content, 14, 40), barcodeCode128.Height + 42);
+                    EstimateBarcodeWidth(ResolveBarcodeContent(barcodeCode128), 14, 40), barcodeCode128.Height + 42);
             case BarcodeAnsiCodabar barcodeAnsiCodabar:
                 return Rect(barcodeAnsiCodabar.Origin, offsetX, offsetY,
-                    EstimateBarcodeWidth(barcodeAnsiCodabar.Content, 13, 20), barcodeAnsiCodabar.Height + 42);
+                    EstimateBarcodeWidth(ResolveBarcodeContent(barcodeAnsiCodabar), 13, 20), barcodeAnsiCodabar.Height + 42);
             case GraphicField graphicField:
                 return graphicField.Bitmap == null
                     ? Rect(graphicField.Origin, offsetX, offsetY, 120, 80)
@@ -238,15 +239,15 @@ public sealed class ZplPreviewRenderer
                 DrawDiagonal(graphics, graphicDiagonalLine, state);
                 break;
             case GraphicEllipse graphicEllipse:
-                DrawEllipse(graphics, graphicEllipse.Origin, state, graphicEllipse.Width, graphicEllipse.Height,
+                DrawEllipse(graphics, ResolveOrigin(graphicEllipse.Origin, state), state, graphicEllipse.Width, graphicEllipse.Height,
                     graphicEllipse.BorderThickness);
                 break;
             case GraphicCircle graphicCircle:
-                DrawEllipse(graphics, graphicCircle.Origin, state, graphicCircle.Diameter, graphicCircle.Diameter,
+                DrawEllipse(graphics, ResolveOrigin(graphicCircle.Origin, state), state, graphicCircle.Diameter, graphicCircle.Diameter,
                     graphicCircle.BorderThickness);
                 break;
             case GraphicBox graphicBox:
-                DrawBox(graphics, graphicBox.Origin, state, graphicBox.Width, graphicBox.Height,
+                DrawBox(graphics, ResolveOrigin(graphicBox.Origin, state), state, graphicBox.Width, graphicBox.Height,
                     graphicBox.BorderThickness,
                     graphicBox.LineColor);
                 break;
@@ -278,7 +279,7 @@ public sealed class ZplPreviewRenderer
                 DrawDataMatrix(graphics, barcodeDatamatrix, state, warnings);
                 break;
             case GraphicField graphicField:
-                DrawImage(graphics, graphicField.Origin, state, graphicField.Bitmap,
+                DrawImage(graphics, ResolveOrigin(graphicField.Origin, state), state, graphicField.Bitmap,
                     graphicField.Bitmap?.Width ?? 120, graphicField.Bitmap?.Height ?? 80);
                 break;
             case DownloadGraphic downloadGraphic:
@@ -289,9 +290,12 @@ public sealed class ZplPreviewRenderer
             {
                 var key = GraphicKey(recallGraphic.StorageDevice, recallGraphic.ImageName, recallGraphic.Extension);
                 storedGraphics.TryGetValue(key, out var image);
-                DrawImage(graphics, recallGraphic.Origin, state, image, image?.Width ?? 120, image?.Height ?? 80);
+                DrawImage(graphics, ResolveOrigin(recallGraphic.Origin, state), state, image, image?.Width ?? 120, image?.Height ?? 80);
                 break;
             }
+            case FieldOrigin fieldOrigin:
+                state.PendingFieldOrigin = fieldOrigin;
+                break;
             case BarcodeFieldDefault barcodeFieldDefault:
                 state.BarcodeDefaults = barcodeFieldDefault;
                 break;
@@ -300,6 +304,9 @@ public sealed class ZplPreviewRenderer
                 break;
             case FieldSeparator:
                 state.ReverseField = false;
+                state.PendingFieldOrigin = null;
+                state.PendingBarcodeText = null;
+                state.PendingBarcodeOrigin = null;
                 break;
             case TextField textField:
                 DrawTextField(graphics, textField, state, state.ReverseField || textField.ReversePrint);
@@ -310,24 +317,72 @@ public sealed class ZplPreviewRenderer
     private static void DrawTextField(Graphics graphics, TextField textField, RenderState state, bool reverse,
         Rectangle? overrideBounds = null)
     {
-        var origin = textField.Origin;
+        var origin = ResolveOrigin(textField.Origin, state);
         var x = state.OffsetX + (origin?.PositionX ?? 0);
         var y = state.OffsetY + (origin?.PositionY ?? 0);
-        var rect = overrideBounds ?? new Rectangle(x, y, EstimateTextWidth(textField.Text, textField.Font),
-            Math.Max(24, textField.Font?.FontHeight ?? 24));
-        using var backBrush = new SolidBrush(reverse ? state.Foreground : state.Background);
-        using var foreBrush = new SolidBrush(reverse ? state.Background : state.Foreground);
-        graphics.FillRectangle(backBrush, rect);
-
         using var font = CreateFont(textField.Font, textField.Font?.FontName != "A");
-        var format = StringFormat.GenericTypographic;
-        format.FormatFlags |= StringFormatFlags.NoClip;
-        graphics.DrawString(textField.Text ?? string.Empty, font, foreBrush, rect, format);
+        var measuredRect = MeasureTextRect(graphics, textField.Text, font, x, y);
+        var rect = overrideBounds ?? measuredRect;
+        var isBarcodeLabel = TryGetBarcodeTextOverrideBounds(textField, state, measuredRect, out var barcodeRect);
+        if (isBarcodeLabel)
+            rect = barcodeRect;
+        else if ((textField.Text?.Length ?? 0) <= 2 && (textField.Font?.FontHeight ?? 0) >= 100)
+        {
+            rect = new Rectangle(
+                rect.Left,
+                Math.Max(0, rect.Top - Math.Max(24, (textField.Font?.FontHeight ?? 0) / 3)),
+                Math.Max(rect.Width, Math.Max(300, (textField.Font?.FontHeight ?? 0) + 140)),
+                Math.Max(rect.Height, Math.Max(260, (textField.Font?.FontHeight ?? 0) + 60)));
+        }
+
+        using var foreBrush = new SolidBrush(reverse ? state.Background : state.Foreground);
+        if (reverse)
+        {
+            using var backBrush = new SolidBrush(state.Foreground);
+            graphics.FillRectangle(backBrush, rect);
+        }
+
+        var flags = TextFormatFlags.NoPadding | TextFormatFlags.NoClipping | TextFormatFlags.NoPrefix;
+        if (isBarcodeLabel)
+            flags |= TextFormatFlags.HorizontalCenter | TextFormatFlags.Top | TextFormatFlags.SingleLine;
+        else if ((textField.Text?.Length ?? 0) <= 2 && (textField.Font?.FontHeight ?? 0) >= 100)
+            flags |= TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine;
+
+        TextRenderer.DrawText(graphics, textField.Text ?? string.Empty, font, rect, foreBrush.Color, flags);
+    }
+
+    private static bool TryGetBarcodeTextOverrideBounds(TextField textField, RenderState state, Rectangle measuredRect,
+        out Rectangle overrideBounds)
+    {
+        overrideBounds = measuredRect;
+
+        if (state.PendingBarcodeText == null || state.PendingBarcodeBounds == null)
+            return false;
+
+        var origin = ResolveOrigin(textField.Origin, state);
+        var matchesText = string.Equals(textField.Text ?? string.Empty, state.PendingBarcodeText,
+            StringComparison.Ordinal);
+        var matchesOrigin = origin != null && state.PendingBarcodeOrigin != null &&
+                            origin.PositionX == state.PendingBarcodeOrigin.PositionX &&
+                            origin.PositionY == state.PendingBarcodeOrigin.PositionY;
+
+        if (!matchesText || !matchesOrigin)
+            return false;
+
+        overrideBounds = new Rectangle(
+            state.PendingBarcodeBounds.Value.Left,
+            state.PendingBarcodeBounds.Value.Bottom + 4,
+            state.PendingBarcodeBounds.Value.Width,
+            measuredRect.Height);
+        state.PendingBarcodeText = null;
+        state.PendingBarcodeOrigin = null;
+        state.PendingBarcodeBounds = null;
+        return true;
     }
 
     private static void DrawTextBlock(Graphics graphics, TextField field, RenderState state, bool singleLine = false)
     {
-        var origin = field.Origin;
+        var origin = ResolveOrigin(field.Origin, state);
         var x = state.OffsetX + (origin?.PositionX ?? 0);
         var y = state.OffsetY + (origin?.PositionY ?? 0);
 
@@ -371,17 +426,28 @@ public sealed class ZplPreviewRenderer
     private static void DrawBox(Graphics graphics, FieldOrigin? origin, RenderState state, int width, int height,
         int borderThickness, Enums.BlackWhite lineColor)
     {
-        var rect = new Rectangle(state.OffsetX + (origin?.PositionX ?? 0), state.OffsetY + (origin?.PositionY ?? 0),
+        var resolvedOrigin = ResolveOrigin(origin, state);
+        var rect = new Rectangle(state.OffsetX + (resolvedOrigin?.PositionX ?? 0), state.OffsetY + (resolvedOrigin?.PositionY ?? 0),
             Math.Max(1, width), Math.Max(1, height));
-        using var pen = new Pen(lineColor == Enums.BlackWhite.B ? state.Foreground : state.Background,
-            Math.Max(1, borderThickness));
+        var thickness = Math.Max(1, borderThickness);
+        var color = lineColor == Enums.BlackWhite.B ? state.Foreground : state.Background;
+
+        if (thickness >= Math.Min(rect.Width, rect.Height))
+        {
+            using var brush = new SolidBrush(color);
+            graphics.FillRectangle(brush, rect);
+            return;
+        }
+
+        using var pen = new Pen(color, thickness);
         graphics.DrawRectangle(pen, rect);
     }
 
     private static void DrawEllipse(Graphics graphics, FieldOrigin? origin, RenderState state, int width, int height,
         int borderThickness)
     {
-        var rect = new Rectangle(state.OffsetX + (origin?.PositionX ?? 0), state.OffsetY + (origin?.PositionY ?? 0),
+        var resolvedOrigin = ResolveOrigin(origin, state);
+        var rect = new Rectangle(state.OffsetX + (resolvedOrigin?.PositionX ?? 0), state.OffsetY + (resolvedOrigin?.PositionY ?? 0),
             Math.Max(1, width), Math.Max(1, height));
         using var pen = new Pen(state.Foreground, Math.Max(1, borderThickness));
         graphics.DrawEllipse(pen, rect);
@@ -414,7 +480,8 @@ public sealed class ZplPreviewRenderer
     private static void DrawCode39(Graphics graphics, BarcodeCode39 barcode, RenderState state, List<string> warnings)
     {
         var barcodeDefaults = state.BarcodeDefaults ?? BarcodeFieldDefault.Current;
-        var content = ApplyCode39Checksum(barcode.Content ?? string.Empty, barcode.Mod43CheckDigit);
+        var content = ResolveBarcodeContent(barcode);
+        content = ApplyCode39Checksum(content, barcode.Mod43CheckDigit);
         if (string.IsNullOrWhiteSpace(content))
         {
             warnings.Add("Code39 barcode skipped because content is empty.");
@@ -437,13 +504,18 @@ public sealed class ZplPreviewRenderer
             false,
             false);
         ApplyOrientation(bitmap, barcode.Orientation);
-        DrawBitmap(graphics, barcode.Origin, state, bitmap);
+        DrawBitmap(graphics, ResolveOrigin(barcode.Origin, state), state, bitmap);
+        state.PendingBarcodeText = content;
+        state.PendingBarcodeOrigin = ResolveOrigin(barcode.Origin, state);
+        state.PendingBarcodeBounds = new Rectangle(state.OffsetX + (ResolveOrigin(barcode.Origin, state)?.PositionX ?? 0),
+            state.OffsetY + (ResolveOrigin(barcode.Origin, state)?.PositionY ?? 0), bitmap.Width, bitmap.Height);
     }
 
     private static void DrawCode128(Graphics graphics, BarcodeCode128 barcode, RenderState state, List<string> warnings)
     {
         var barcodeDefaults = state.BarcodeDefaults ?? BarcodeFieldDefault.Current;
-        if (string.IsNullOrWhiteSpace(barcode.Content))
+        var content = ResolveBarcodeContent(barcode);
+        if (string.IsNullOrWhiteSpace(content))
         {
             warnings.Add("Code128 barcode skipped because content is empty.");
             return;
@@ -454,7 +526,7 @@ public sealed class ZplPreviewRenderer
         var background = state.ReverseField ? state.Foreground : state.Background;
         using var bitmap = CreateLinearBarcodeBitmap(
             BarcodeFormat.CODE_128,
-            barcode.Content ?? string.Empty,
+            content,
             moduleWidth,
             barHeight,
             barcode.PrintInterpretationLine,
@@ -465,7 +537,11 @@ public sealed class ZplPreviewRenderer
             barcode.UCCCheckDigit == Enums.YesNo.Y,
             false);
         ApplyOrientation(bitmap, barcode.Orientation);
-        DrawBitmap(graphics, barcode.Origin, state, bitmap);
+        DrawBitmap(graphics, ResolveOrigin(barcode.Origin, state), state, bitmap);
+        state.PendingBarcodeText = content;
+        state.PendingBarcodeOrigin = ResolveOrigin(barcode.Origin, state);
+        state.PendingBarcodeBounds = new Rectangle(state.OffsetX + (ResolveOrigin(barcode.Origin, state)?.PositionX ?? 0),
+            state.OffsetY + (ResolveOrigin(barcode.Origin, state)?.PositionY ?? 0), bitmap.Width, bitmap.Height);
     }
 
     private static void DrawCodabar(Graphics graphics, BarcodeAnsiCodabar barcode, RenderState state, List<string> warnings)
@@ -473,7 +549,8 @@ public sealed class ZplPreviewRenderer
         var barcodeDefaults = state.BarcodeDefaults ?? BarcodeFieldDefault.Current;
         var moduleWidth = Math.Max(1, barcodeDefaults?.ModuleWidth ?? 2);
         var barHeight = Math.Max(1, barcode.Height > 0 ? barcode.Height : barcodeDefaults?.Height ?? 10);
-        var content = ApplyCodabarChecksum(barcode.Content ?? string.Empty, barcode.CheckDigit);
+        var content = ResolveBarcodeContent(barcode);
+        content = ApplyCodabarChecksum(content, barcode.CheckDigit);
         content =
             $"{char.ToUpperInvariant(barcode.StartCharacter)}{content}{char.ToUpperInvariant(barcode.StopCharacter)}";
         if (string.IsNullOrWhiteSpace(content))
@@ -497,12 +574,17 @@ public sealed class ZplPreviewRenderer
             false,
             false);
         ApplyOrientation(bitmap, barcode.Orientation);
-        DrawBitmap(graphics, barcode.Origin, state, bitmap);
+        DrawBitmap(graphics, ResolveOrigin(barcode.Origin, state), state, bitmap);
+        state.PendingBarcodeText = content;
+        state.PendingBarcodeOrigin = ResolveOrigin(barcode.Origin, state);
+        state.PendingBarcodeBounds = new Rectangle(state.OffsetX + (ResolveOrigin(barcode.Origin, state)?.PositionX ?? 0),
+            state.OffsetY + (ResolveOrigin(barcode.Origin, state)?.PositionY ?? 0), bitmap.Width, bitmap.Height);
     }
 
     private static void DrawQrCode(Graphics graphics, BarcodeQR barcode, RenderState state, List<string> warnings)
     {
-        if (string.IsNullOrWhiteSpace(barcode.Content))
+        var content = ResolveBarcodeContent(barcode);
+        if (string.IsNullOrWhiteSpace(content))
         {
             warnings.Add("QR code skipped because content is empty.");
             return;
@@ -517,22 +599,26 @@ public sealed class ZplPreviewRenderer
             [EncodeHintType.ERROR_CORRECTION] = MapQrErrorCorrection(barcode.ErrorCorrection)
         };
 
-        if (IsGs1Payload(barcode.Content))
+        if (IsGs1Payload(content))
             hints[EncodeHintType.GS1_FORMAT] = true;
 
         if (barcode.Model > 0)
             hints[EncodeHintType.QR_VERSION] = barcode.Model;
 
-        using var bitmap = CreateMatrixBarcodeBitmap(BarcodeFormat.QR_CODE, barcode.Content ?? string.Empty, hints,
+        using var bitmap = CreateMatrixBarcodeBitmap(BarcodeFormat.QR_CODE, content, hints,
             scale,
             foreground, background);
         ApplyOrientation(bitmap, barcode.FieldPosition);
-        DrawBitmap(graphics, barcode.Origin, state, bitmap);
+        DrawBitmap(graphics, ResolveOrigin(barcode.Origin, state), state, bitmap);
+        state.PendingBarcodeText = null;
+        state.PendingBarcodeOrigin = null;
+        state.PendingBarcodeBounds = null;
     }
 
     private static void DrawDataMatrix(Graphics graphics, BarcodeDatamatrix barcode, RenderState state, List<string> warnings)
     {
-        if (string.IsNullOrWhiteSpace(barcode.Content))
+        var content = ResolveBarcodeContent(barcode);
+        if (string.IsNullOrWhiteSpace(content))
         {
             warnings.Add("Data Matrix skipped because content is empty.");
             return;
@@ -546,7 +632,7 @@ public sealed class ZplPreviewRenderer
             [EncodeHintType.PURE_BARCODE] = true
         };
 
-        if (IsGs1Payload(barcode.Content))
+        if (IsGs1Payload(content))
             hints[EncodeHintType.GS1_FORMAT] = true;
 
         if (barcode.Cols > 0 && barcode.Rows > 0)
@@ -562,10 +648,13 @@ public sealed class ZplPreviewRenderer
         if (barcode.FormatID > 0)
             hints[EncodeHintType.DATA_MATRIX_DEFAULT_ENCODATION] = barcode.FormatID;
 
-        using var bitmap = CreateMatrixBarcodeBitmap(BarcodeFormat.DATA_MATRIX, barcode.Content ?? string.Empty, hints,
+        using var bitmap = CreateMatrixBarcodeBitmap(BarcodeFormat.DATA_MATRIX, content, hints,
             scale, foreground, background);
         ApplyOrientation(bitmap, barcode.Orientation);
-        DrawBitmap(graphics, barcode.Origin, state, bitmap);
+        DrawBitmap(graphics, ResolveOrigin(barcode.Origin, state), state, bitmap);
+        state.PendingBarcodeText = null;
+        state.PendingBarcodeOrigin = null;
+        state.PendingBarcodeBounds = null;
     }
 
     private static void DrawBitmap(Graphics graphics, FieldOrigin? origin, RenderState state, Bitmap bitmap)
@@ -591,7 +680,8 @@ public sealed class ZplPreviewRenderer
 
     private static Font CreateFont(ScalableBitmappedFont? font, bool bold)
     {
-        var size = Math.Max(8f, font?.FontHeight ?? 24f);
+        var rawSize = font?.FontHeight ?? 24f;
+        var size = Math.Max(8f, rawSize >= 100 ? rawSize * 0.75f : rawSize);
         var family = string.Equals(font?.FontName, "A", StringComparison.OrdinalIgnoreCase)
             ? "Consolas"
             : "Arial";
@@ -604,6 +694,16 @@ public sealed class ZplPreviewRenderer
         var baseWidth = Math.Max(8, font?.FontWidth ?? 16);
         var factor = string.Equals(font?.FontName, "A", StringComparison.OrdinalIgnoreCase) ? baseWidth : baseWidth / 2;
         return Math.Max(120, length * Math.Max(8, factor));
+    }
+
+    private static Rectangle MeasureTextRect(Graphics graphics, string? text, Font font, int x, int y)
+    {
+        var value = text ?? string.Empty;
+        var measured = TextRenderer.MeasureText(graphics, value, font, new Size(int.MaxValue, int.MaxValue),
+            TextFormatFlags.NoPadding | TextFormatFlags.NoClipping | TextFormatFlags.NoPrefix);
+        var width = Math.Max(1, measured.Width + 4);
+        var height = Math.Max(1, measured.Height + 4);
+        return new Rectangle(x, y, width, height);
     }
 
     private static string ApplyCode39Checksum(string content, bool appendChecksum)
@@ -780,6 +880,55 @@ public sealed class ZplPreviewRenderer
         return $"{storageDevice}|{imageName}|{extension}".ToUpperInvariant();
     }
 
+    private static FieldOrigin? ResolveOrigin(FieldOrigin? origin, RenderState state)
+    {
+        return origin ?? state.PendingFieldOrigin;
+    }
+
+    private static string ResolveBarcodeContent(BaseElement element)
+    {
+        if (element is Barcode1D barcode1D)
+        {
+            if (!string.IsNullOrWhiteSpace(barcode1D.Content))
+                return barcode1D.Content;
+
+            if (element.Child is FieldData fieldData)
+                return fieldData.Data ?? string.Empty;
+        }
+
+        if (element is BarcodeQR barcodeQR)
+        {
+            if (!string.IsNullOrWhiteSpace(barcodeQR.Content))
+                return barcodeQR.Content;
+
+            if (element.Child is FieldData fieldData)
+                return ExtractStructuredBarcodeContent(fieldData.Data);
+        }
+
+        if (element is BarcodeDatamatrix barcodeDatamatrix)
+        {
+            if (!string.IsNullOrWhiteSpace(barcodeDatamatrix.Content))
+                return barcodeDatamatrix.Content;
+
+            if (element.Child is FieldData fieldData)
+                return ExtractStructuredBarcodeContent(fieldData.Data);
+        }
+
+        return string.Empty;
+    }
+
+    private static string ExtractStructuredBarcodeContent(string? data)
+    {
+        if (string.IsNullOrWhiteSpace(data))
+            return string.Empty;
+
+        var trimmed = data.Trim();
+        var commaIndex = trimmed.IndexOf(',');
+        return commaIndex >= 0 && commaIndex + 1 < trimmed.Length
+            ? trimmed.Substring(commaIndex + 1)
+            : trimmed;
+    }
+
     private sealed class RenderState
     {
         public int OffsetX { get; set; }
@@ -788,5 +937,9 @@ public sealed class ZplPreviewRenderer
         public Color Background { get; set; }
         public BarcodeFieldDefault? BarcodeDefaults { get; set; }
         public bool ReverseField { get; set; }
+        public FieldOrigin? PendingFieldOrigin { get; set; }
+        public string? PendingBarcodeText { get; set; }
+        public FieldOrigin? PendingBarcodeOrigin { get; set; }
+        public Rectangle? PendingBarcodeBounds { get; set; }
     }
 }
