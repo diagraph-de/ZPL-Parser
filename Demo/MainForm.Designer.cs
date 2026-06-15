@@ -11,7 +11,27 @@ partial class MainForm
     private System.Windows.Forms.Button _openZplButton = null!;
     private System.Windows.Forms.Button _refreshButton = null!;
     private System.Windows.Forms.Button _copyZplButton = null!;
-    private System.Windows.Forms.TextBox _zplInput = null!;
+    private System.Windows.Forms.RichTextBox _zplInput = null!;
+    private System.Windows.Forms.Panel _leftFooterPanel = null!;
+    private System.Windows.Forms.GroupBox _previewSettingsGroup = null!;
+    private System.Windows.Forms.TableLayoutPanel _previewSettingsLayout = null!;
+    private System.Windows.Forms.Label _printDensityLabel = null!;
+    private System.Windows.Forms.ComboBox _printDensityComboBox = null!;
+    private System.Windows.Forms.Label _printQualityLabel = null!;
+    private System.Windows.Forms.ComboBox _printQualityComboBox = null!;
+    private System.Windows.Forms.Label _labelSizeLabel = null!;
+    private System.Windows.Forms.TextBox _labelWidthTextBox = null!;
+    private System.Windows.Forms.Label _labelSizeSeparatorLabel = null!;
+    private System.Windows.Forms.TextBox _labelHeightTextBox = null!;
+    private System.Windows.Forms.ComboBox _labelUnitComboBox = null!;
+    private System.Windows.Forms.Label _showLabelLabel = null!;
+    private System.Windows.Forms.NumericUpDown _showLabelIndexNumeric = null!;
+    private System.Windows.Forms.Label _showLabelOfLabel = null!;
+    private System.Windows.Forms.NumericUpDown _showLabelTotalNumeric = null!;
+    private System.Windows.Forms.Label _apiSettingsLabel = null!;
+    private System.Windows.Forms.TextBox _apiHostTextBox = null!;
+    private System.Windows.Forms.TextBox _apiKeyTextBox = null!;
+    private System.Windows.Forms.CheckBox _rememberLastLabelCheckBox = null!;
     private System.Windows.Forms.TabControl _rightTabs = null!;
     private System.Windows.Forms.TabPage _previewTab = null!;
     private System.Windows.Forms.Panel _previewToolbar = null!;
@@ -32,7 +52,7 @@ partial class MainForm
     {
         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
         _rootSplit = new System.Windows.Forms.SplitContainer();
-        _zplInput = new System.Windows.Forms.TextBox();
+        _zplInput = new System.Windows.Forms.RichTextBox();
         _leftToolbar = new System.Windows.Forms.FlowLayoutPanel();
         _overviewButton = new System.Windows.Forms.Button();
         _graphicsButton = new System.Windows.Forms.Button();
@@ -41,6 +61,26 @@ partial class MainForm
         _openZplButton = new System.Windows.Forms.Button();
         _refreshButton = new System.Windows.Forms.Button();
         _copyZplButton = new System.Windows.Forms.Button();
+        _leftFooterPanel = new System.Windows.Forms.Panel();
+        _previewSettingsGroup = new System.Windows.Forms.GroupBox();
+        _previewSettingsLayout = new System.Windows.Forms.TableLayoutPanel();
+        _printDensityLabel = new System.Windows.Forms.Label();
+        _printDensityComboBox = new System.Windows.Forms.ComboBox();
+        _printQualityLabel = new System.Windows.Forms.Label();
+        _printQualityComboBox = new System.Windows.Forms.ComboBox();
+        _labelSizeLabel = new System.Windows.Forms.Label();
+        _labelWidthTextBox = new System.Windows.Forms.TextBox();
+        _labelSizeSeparatorLabel = new System.Windows.Forms.Label();
+        _labelHeightTextBox = new System.Windows.Forms.TextBox();
+        _labelUnitComboBox = new System.Windows.Forms.ComboBox();
+        _showLabelLabel = new System.Windows.Forms.Label();
+        _showLabelIndexNumeric = new System.Windows.Forms.NumericUpDown();
+        _showLabelOfLabel = new System.Windows.Forms.Label();
+        _showLabelTotalNumeric = new System.Windows.Forms.NumericUpDown();
+        _apiSettingsLabel = new System.Windows.Forms.Label();
+        _apiHostTextBox = new System.Windows.Forms.TextBox();
+        _apiKeyTextBox = new System.Windows.Forms.TextBox();
+        _rememberLastLabelCheckBox = new System.Windows.Forms.CheckBox();
         _rightTabs = new System.Windows.Forms.TabControl();
         _previewTab = new System.Windows.Forms.TabPage();
         _previewHost = new System.Windows.Forms.Panel();
@@ -61,6 +101,11 @@ partial class MainForm
         _rootSplit.Panel2.SuspendLayout();
         _rootSplit.SuspendLayout();
         _leftToolbar.SuspendLayout();
+        _leftFooterPanel.SuspendLayout();
+        _previewSettingsGroup.SuspendLayout();
+        _previewSettingsLayout.SuspendLayout();
+        ((System.ComponentModel.ISupportInitialize)_showLabelIndexNumeric).BeginInit();
+        ((System.ComponentModel.ISupportInitialize)_showLabelTotalNumeric).BeginInit();
         _rightTabs.SuspendLayout();
         _previewTab.SuspendLayout();
         _previewHost.SuspendLayout();
@@ -82,6 +127,7 @@ partial class MainForm
         // 
         _rootSplit.Panel1.Controls.Add(_zplInput);
         _rootSplit.Panel1.Controls.Add(_leftToolbar);
+        _rootSplit.Panel1.Controls.Add(_leftFooterPanel);
         // 
         // _rootSplit.Panel2
         // 
@@ -92,14 +138,15 @@ partial class MainForm
         // 
         // _zplInput
         // 
-        _zplInput.AcceptsReturn = true;
         _zplInput.AcceptsTab = true;
         _zplInput.Dock = System.Windows.Forms.DockStyle.Fill;
+        _zplInput.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+        _zplInput.DetectUrls = false;
         _zplInput.Font = new System.Drawing.Font("Consolas", 10F);
         _zplInput.Location = new System.Drawing.Point(0, 39);
         _zplInput.Multiline = true;
         _zplInput.Name = "_zplInput";
-        _zplInput.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+        _zplInput.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Both;
         _zplInput.Size = new System.Drawing.Size(615, 503);
         _zplInput.TabIndex = 0;
         _zplInput.WordWrap = false;
@@ -120,6 +167,234 @@ partial class MainForm
         _leftToolbar.Size = new System.Drawing.Size(615, 39);
         _leftToolbar.TabIndex = 1;
         _leftToolbar.WrapContents = false;
+        // 
+        // _leftFooterPanel
+        // 
+        _leftFooterPanel.Controls.Add(_previewSettingsGroup);
+        _leftFooterPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
+        _leftFooterPanel.Location = new System.Drawing.Point(0, 330);
+        _leftFooterPanel.Name = "_leftFooterPanel";
+        _leftFooterPanel.Padding = new System.Windows.Forms.Padding(8, 4, 8, 8);
+        _leftFooterPanel.Size = new System.Drawing.Size(615, 212);
+        _leftFooterPanel.TabIndex = 2;
+        // 
+        // _previewSettingsGroup
+        // 
+        _previewSettingsGroup.Controls.Add(_previewSettingsLayout);
+        _previewSettingsGroup.Dock = System.Windows.Forms.DockStyle.Fill;
+        _previewSettingsGroup.Location = new System.Drawing.Point(8, 4);
+        _previewSettingsGroup.Name = "_previewSettingsGroup";
+        _previewSettingsGroup.Size = new System.Drawing.Size(599, 200);
+        _previewSettingsGroup.TabIndex = 0;
+        _previewSettingsGroup.TabStop = false;
+        _previewSettingsGroup.Text = "Preview Settings";
+        // 
+        // _previewSettingsLayout
+        // 
+        _previewSettingsLayout.ColumnCount = 5;
+        _previewSettingsLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+        _previewSettingsLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 40F));
+        _previewSettingsLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+        _previewSettingsLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 60F));
+        _previewSettingsLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
+        _previewSettingsLayout.Controls.Add(_printDensityLabel, 0, 0);
+        _previewSettingsLayout.Controls.Add(_printDensityComboBox, 1, 0);
+        _previewSettingsLayout.Controls.Add(_printQualityLabel, 2, 0);
+        _previewSettingsLayout.Controls.Add(_printQualityComboBox, 3, 0);
+        _previewSettingsLayout.Controls.Add(_labelSizeLabel, 0, 1);
+        _previewSettingsLayout.Controls.Add(_labelWidthTextBox, 1, 1);
+        _previewSettingsLayout.Controls.Add(_labelSizeSeparatorLabel, 2, 1);
+        _previewSettingsLayout.Controls.Add(_labelHeightTextBox, 3, 1);
+        _previewSettingsLayout.Controls.Add(_labelUnitComboBox, 4, 1);
+        _previewSettingsLayout.Controls.Add(_showLabelLabel, 0, 2);
+        _previewSettingsLayout.Controls.Add(_showLabelIndexNumeric, 1, 2);
+        _previewSettingsLayout.Controls.Add(_showLabelOfLabel, 2, 2);
+        _previewSettingsLayout.Controls.Add(_showLabelTotalNumeric, 3, 2);
+        _previewSettingsLayout.Controls.Add(_apiSettingsLabel, 0, 3);
+        _previewSettingsLayout.Controls.Add(_apiHostTextBox, 1, 3);
+        _previewSettingsLayout.Controls.Add(_apiKeyTextBox, 3, 3);
+        _previewSettingsLayout.Controls.Add(_rememberLastLabelCheckBox, 1, 4);
+        _previewSettingsLayout.Dock = System.Windows.Forms.DockStyle.Fill;
+        _previewSettingsLayout.Location = new System.Drawing.Point(3, 19);
+        _previewSettingsLayout.Name = "_previewSettingsLayout";
+        _previewSettingsLayout.RowCount = 5;
+        _previewSettingsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+        _previewSettingsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+        _previewSettingsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+        _previewSettingsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+        _previewSettingsLayout.RowStyles.Add(new System.Windows.Forms.RowStyle());
+        _previewSettingsLayout.Size = new System.Drawing.Size(593, 178);
+        _previewSettingsLayout.TabIndex = 0;
+        // 
+        // _printDensityLabel
+        // 
+        _printDensityLabel.AutoSize = true;
+        _printDensityLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+        _printDensityLabel.Location = new System.Drawing.Point(3, 0);
+        _printDensityLabel.Name = "_printDensityLabel";
+        _printDensityLabel.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+        _printDensityLabel.Size = new System.Drawing.Size(75, 28);
+        _printDensityLabel.TabIndex = 0;
+        _printDensityLabel.Text = "Print Density:";
+        // 
+        // _printDensityComboBox
+        // 
+        _printDensityComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+        _printDensityComboBox.FormattingEnabled = true;
+        _printDensityComboBox.Items.AddRange(new object[] { "6 dpmm (152 dpi)", "8 dpmm (203 dpi)", "12 dpmm (300 dpi)", "24 dpmm (600 dpi)" });
+        _printDensityComboBox.Location = new System.Drawing.Point(84, 3);
+        _printDensityComboBox.Name = "_printDensityComboBox";
+        _printDensityComboBox.Size = new System.Drawing.Size(130, 21);
+        _printDensityComboBox.TabIndex = 1;
+        // 
+        // _printQualityLabel
+        // 
+        _printQualityLabel.AutoSize = true;
+        _printQualityLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+        _printQualityLabel.Location = new System.Drawing.Point(220, 0);
+        _printQualityLabel.Name = "_printQualityLabel";
+        _printQualityLabel.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+        _printQualityLabel.Size = new System.Drawing.Size(69, 28);
+        _printQualityLabel.TabIndex = 2;
+        _printQualityLabel.Text = "Print Quality:";
+        // 
+        // _printQualityComboBox
+        // 
+        _printQualityComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+        _printQualityComboBox.FormattingEnabled = true;
+        _printQualityComboBox.Items.AddRange(new object[] { "Grayscale", "Bitonal" });
+        _printQualityComboBox.Location = new System.Drawing.Point(295, 3);
+        _printQualityComboBox.Name = "_printQualityComboBox";
+        _printQualityComboBox.Size = new System.Drawing.Size(120, 21);
+        _printQualityComboBox.TabIndex = 3;
+        // 
+        // _labelSizeLabel
+        // 
+        _labelSizeLabel.AutoSize = true;
+        _labelSizeLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+        _labelSizeLabel.Location = new System.Drawing.Point(3, 28);
+        _labelSizeLabel.Name = "_labelSizeLabel";
+        _labelSizeLabel.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+        _labelSizeLabel.Size = new System.Drawing.Size(75, 28);
+        _labelSizeLabel.TabIndex = 4;
+        _labelSizeLabel.Text = "Label Size:";
+        // 
+        // _labelWidthTextBox
+        // 
+        _labelWidthTextBox.Location = new System.Drawing.Point(84, 31);
+        _labelWidthTextBox.Name = "_labelWidthTextBox";
+        _labelWidthTextBox.Size = new System.Drawing.Size(56, 20);
+        _labelWidthTextBox.TabIndex = 5;
+        _labelWidthTextBox.Text = "4";
+        // 
+        // _labelSizeSeparatorLabel
+        // 
+        _labelSizeSeparatorLabel.AutoSize = true;
+        _labelSizeSeparatorLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+        _labelSizeSeparatorLabel.Location = new System.Drawing.Point(220, 28);
+        _labelSizeSeparatorLabel.Name = "_labelSizeSeparatorLabel";
+        _labelSizeSeparatorLabel.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+        _labelSizeSeparatorLabel.Size = new System.Drawing.Size(12, 28);
+        _labelSizeSeparatorLabel.TabIndex = 6;
+        _labelSizeSeparatorLabel.Text = "x";
+        // 
+        // _labelHeightTextBox
+        // 
+        _labelHeightTextBox.Location = new System.Drawing.Point(295, 31);
+        _labelHeightTextBox.Name = "_labelHeightTextBox";
+        _labelHeightTextBox.Size = new System.Drawing.Size(56, 20);
+        _labelHeightTextBox.TabIndex = 7;
+        _labelHeightTextBox.Text = "6";
+        // 
+        // _labelUnitComboBox
+        // 
+        _labelUnitComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+        _labelUnitComboBox.FormattingEnabled = true;
+        _labelUnitComboBox.Items.AddRange(new object[] { "inches", "mm", "cm" });
+        _labelUnitComboBox.Location = new System.Drawing.Point(357, 31);
+        _labelUnitComboBox.Name = "_labelUnitComboBox";
+        _labelUnitComboBox.Size = new System.Drawing.Size(58, 21);
+        _labelUnitComboBox.TabIndex = 8;
+        // 
+        // _showLabelLabel
+        // 
+        _showLabelLabel.AutoSize = true;
+        _showLabelLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+        _showLabelLabel.Location = new System.Drawing.Point(3, 56);
+        _showLabelLabel.Name = "_showLabelLabel";
+        _showLabelLabel.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+        _showLabelLabel.Size = new System.Drawing.Size(75, 28);
+        _showLabelLabel.TabIndex = 9;
+        _showLabelLabel.Text = "Show Label:";
+        // 
+        // _showLabelIndexNumeric
+        // 
+        _showLabelIndexNumeric.Location = new System.Drawing.Point(84, 59);
+        _showLabelIndexNumeric.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+        _showLabelIndexNumeric.Name = "_showLabelIndexNumeric";
+        _showLabelIndexNumeric.Size = new System.Drawing.Size(56, 20);
+        _showLabelIndexNumeric.TabIndex = 10;
+        _showLabelIndexNumeric.Value = new decimal(new int[] { 1, 0, 0, 0 });
+        // 
+        // _showLabelOfLabel
+        // 
+        _showLabelOfLabel.AutoSize = true;
+        _showLabelOfLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+        _showLabelOfLabel.Location = new System.Drawing.Point(220, 56);
+        _showLabelOfLabel.Name = "_showLabelOfLabel";
+        _showLabelOfLabel.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+        _showLabelOfLabel.Size = new System.Drawing.Size(52, 28);
+        _showLabelOfLabel.TabIndex = 11;
+        _showLabelOfLabel.Text = "of";
+        // 
+        // _showLabelTotalNumeric
+        // 
+        _showLabelTotalNumeric.Location = new System.Drawing.Point(295, 59);
+        _showLabelTotalNumeric.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+        _showLabelTotalNumeric.Name = "_showLabelTotalNumeric";
+        _showLabelTotalNumeric.Size = new System.Drawing.Size(56, 20);
+        _showLabelTotalNumeric.TabIndex = 12;
+        _showLabelTotalNumeric.Value = new decimal(new int[] { 1, 0, 0, 0 });
+        // 
+        // _apiSettingsLabel
+        // 
+        _apiSettingsLabel.AutoSize = true;
+        _apiSettingsLabel.Dock = System.Windows.Forms.DockStyle.Fill;
+        _apiSettingsLabel.Location = new System.Drawing.Point(3, 84);
+        _apiSettingsLabel.Name = "_apiSettingsLabel";
+        _apiSettingsLabel.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+        _apiSettingsLabel.Size = new System.Drawing.Size(75, 28);
+        _apiSettingsLabel.TabIndex = 13;
+        _apiSettingsLabel.Text = "API Settings:";
+        // 
+        // _apiHostTextBox
+        // 
+        _apiHostTextBox.Location = new System.Drawing.Point(84, 87);
+        _apiHostTextBox.Name = "_apiHostTextBox";
+        _apiHostTextBox.Size = new System.Drawing.Size(185, 20);
+        _apiHostTextBox.TabIndex = 14;
+        _apiHostTextBox.Text = BuildDefaultPreviewApiHost();
+        _previewSettingsLayout.SetColumnSpan(_apiHostTextBox, 2);
+        // 
+        // _apiKeyTextBox
+        // 
+        _apiKeyTextBox.Location = new System.Drawing.Point(295, 87);
+        _apiKeyTextBox.Name = "_apiKeyTextBox";
+        _apiKeyTextBox.Size = new System.Drawing.Size(180, 20);
+        _apiKeyTextBox.TabIndex = 15;
+        _apiKeyTextBox.UseSystemPasswordChar = true;
+        _previewSettingsLayout.SetColumnSpan(_apiKeyTextBox, 2);
+        // 
+        // _rememberLastLabelCheckBox
+        // 
+        _rememberLastLabelCheckBox.AutoSize = true;
+        _previewSettingsLayout.SetColumnSpan(_rememberLastLabelCheckBox, 3);
+        _rememberLastLabelCheckBox.Location = new System.Drawing.Point(84, 113);
+        _rememberLastLabelCheckBox.Name = "_rememberLastLabelCheckBox";
+        _rememberLastLabelCheckBox.Size = new System.Drawing.Size(207, 17);
+        _rememberLastLabelCheckBox.TabIndex = 16;
+        _rememberLastLabelCheckBox.Text = "Remember my last label (stored locally)";
+        _rememberLastLabelCheckBox.UseVisualStyleBackColor = true;
         // 
         // _overviewButton
         // 
@@ -236,11 +511,10 @@ partial class MainForm
         // _previewPictureBox
         // 
         _previewPictureBox.BackColor = System.Drawing.Color.White;
-        _previewPictureBox.Dock = System.Windows.Forms.DockStyle.Fill;
         _previewPictureBox.Location = new System.Drawing.Point(16, 16);
         _previewPictureBox.Name = "_previewPictureBox";
         _previewPictureBox.Size = new System.Drawing.Size(396, 448);
-        _previewPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
+        _previewPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
         _previewPictureBox.TabIndex = 0;
         _previewPictureBox.TabStop = false;
         // 
@@ -374,6 +648,7 @@ partial class MainForm
         Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
         Name = "MainForm";
         StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+        WindowState = System.Windows.Forms.FormWindowState.Maximized;
         Text = "ZPL Parser Demo";
         _rootSplit.Panel1.ResumeLayout(false);
         _rootSplit.Panel1.PerformLayout();

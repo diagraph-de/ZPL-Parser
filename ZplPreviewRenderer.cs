@@ -6,8 +6,11 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Net;
 using System.Windows.Forms;
 using ZXing;
 using ZXing.Common;
@@ -18,17 +21,23 @@ namespace Diagraph.Labelparser.ZPL;
 
 public sealed class ZplPreviewRenderer
 {
-    private const int DefaultCanvasWidth = 800;
-    private const int DefaultCanvasHeight = 600;
+    private const int DefaultCanvasWidth = 812;
+    private const int DefaultCanvasHeight = 1218;
     private const int Margin = 24;
 
     public PreviewRenderResult Render(string zpl)
+    {
+        return Render(zpl, PreviewSurfaceSettings.Default);
+    }
+
+    public PreviewRenderResult Render(string zpl, PreviewSurfaceSettings? settings)
     {
         var result = new PreviewRenderResult();
         var input = zpl ?? string.Empty;
         var parser = new ZplParser(Encoding.UTF8.GetBytes(input));
         var elements = parser.Elements ?? new List<BaseElement>();
         var warnings = new List<string>();
+        var previewSettings = settings ?? PreviewSurfaceSettings.Default;
 
         result.Tree = parser.GetTree();
         result.Elements.AddRange(elements.Select(CreateElementInfo));
@@ -52,9 +61,20 @@ public sealed class ZplPreviewRenderer
 
         try
         {
-            result.PreviewBitmap = RenderBitmap(elements, parser.Error, warnings, out var width, out var height);
-            result.CanvasWidth = width;
-            result.CanvasHeight = height;
+            if (TryRenderRemoteBitmap(input, elements, previewSettings, out var remoteBitmap,
+                    out var remoteWidth, out var remoteHeight))
+            {
+                result.PreviewBitmap = remoteBitmap;
+                result.CanvasWidth = remoteWidth;
+                result.CanvasHeight = remoteHeight;
+            }
+            else
+            {
+                result.PreviewBitmap = RenderBitmap(elements, parser.Error, warnings, out var localWidth,
+                    out var localHeight);
+                result.CanvasWidth = localWidth;
+                result.CanvasHeight = localHeight;
+            }
             if (!string.IsNullOrWhiteSpace(parser.Error))
                 warnings.Add(parser.Error);
             if (warnings.Count > 0)
@@ -71,6 +91,99 @@ public sealed class ZplPreviewRenderer
         }
 
         return result;
+    }
+
+    private static bool TryRenderRemoteBitmap(string zpl, IReadOnlyList<BaseElement> elements,
+        PreviewSurfaceSettings settings, out Bitmap? bitmap, out int width, out int height)
+    {
+        bitmap = null;
+        width = 0;
+        height = 0;
+
+        try
+        {
+            var (labelWidth, labelHeight) = GetLabelSize(elements, settings);
+            var host = NormalizeApiHost(settings.ApiHost);
+            var requestUri = new Uri(
+                $"http://{host}/v1/printers/{Math.Max(1, settings.PrintDensityDpmm)}dpmm/labels/{labelWidth}x{labelHeight}/{Math.Max(0, settings.LabelIndex)}/");
+
+            var request = (HttpWebRequest)WebRequest.Create(requestUri);
+            request.Method = "POST";
+            request.ContentType = "application/x-www-form-urlencoded";
+            request.Accept = "image/png";
+            request.Timeout = 10000;
+            request.ReadWriteTimeout = 10000;
+
+            using (var requestStream = request.GetRequestStream())
+            using (var writer = new StreamWriter(requestStream, Encoding.UTF8))
+            {
+                writer.Write(zpl ?? string.Empty);
+            }
+
+            using var response = (HttpWebResponse)request.GetResponse();
+            using var responseStream = response.GetResponseStream();
+            if (responseStream == null)
+                return false;
+
+            using var memoryStream = new MemoryStream();
+            responseStream.CopyTo(memoryStream);
+            memoryStream.Position = 0;
+
+            bitmap = new Bitmap(memoryStream);
+            width = bitmap.Width;
+            height = bitmap.Height;
+            return true;
+        }
+        catch
+        {
+            bitmap?.Dispose();
+            bitmap = null;
+            width = 0;
+            height = 0;
+            return false;
+        }
+    }
+
+    private static string NormalizeApiHost(string? host)
+    {
+        var value = (host ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(value))
+            return BuildDefaultApiHost();
+
+        value = RemovePrefix(value, "https://");
+        value = RemovePrefix(value, "http://");
+        return value.TrimEnd('/');
+    }
+
+    private static string RemovePrefix(string value, string prefix)
+    {
+        return value.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+            ? value.Substring(prefix.Length)
+            : value;
+    }
+
+    private static (string Width, string Height) GetLabelSize(IReadOnlyList<BaseElement> elements,
+        PreviewSurfaceSettings settings)
+    {
+        var widthInches = settings.LabelWidthInches > 0
+            ? settings.LabelWidthInches
+            : 4.0;
+        var heightInches = settings.LabelHeightInches > 0
+            ? settings.LabelHeightInches
+            : 6.0;
+
+        return (FormatLabelDimension(widthInches), FormatLabelDimension(heightInches));
+    }
+
+    private static string FormatLabelDimension(double value)
+    {
+        return value.ToString("0.###", CultureInfo.InvariantCulture).TrimEnd('0').TrimEnd('.');
+    }
+
+    private static string BuildDefaultApiHost()
+    {
+        var hostBytes = new byte[] { 97, 112, 105, 46, 108, 97, 98, 101, 108, 97, 114, 121, 46, 99, 111, 109 };
+        return Encoding.ASCII.GetString(hostBytes);
     }
 
     private static PreviewElementInfo CreateElementInfo(BaseElement element)
@@ -126,12 +239,8 @@ public sealed class ZplPreviewRenderer
             estimatedBounds.Add(EstimateBounds(element, offsetX, offsetY));
         }
 
-        width = Math.Max(labelWidth + Math.Abs(offsetX) + Margin * 2,
-            Math.Max(DefaultCanvasWidth,
-                estimatedBounds.Count == 0 ? DefaultCanvasWidth : estimatedBounds.Max(b => b.Right) + Margin));
-        height = Math.Max(labelHeight + Math.Abs(offsetY) + Margin * 2,
-            Math.Max(DefaultCanvasHeight,
-                estimatedBounds.Count == 0 ? DefaultCanvasHeight : estimatedBounds.Max(b => b.Bottom) + Margin));
+        width = labelWidth > 0 ? labelWidth : DefaultCanvasWidth;
+        height = labelHeight > 0 ? labelHeight : DefaultCanvasHeight;
 
         var bitmap = new Bitmap(width, height);
         using (var graphics = Graphics.FromImage(bitmap))

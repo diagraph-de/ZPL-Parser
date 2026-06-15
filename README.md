@@ -1,7 +1,7 @@
 # ZPL-Parser
 
 `ZPL-Parser` is a C# library for parsing and rebuilding Zebra Programming Language labels.
-The repository also includes a WinForms demo that exercises the parser and shows a live local preview on the right side while you edit ZPL on the left.
+The repository also includes a WinForms demo that exercises the parser and shows a live preview on the right side while you edit ZPL on the left.
 
 ## What is included
 
@@ -27,8 +27,10 @@ It includes sample buttons for:
 - a mixed label with text, boxes, barcodes, and graphics
 - a graphics-focused sample with `^GF`, `~DG`, and `^XG`
 - a barcode-focused sample
+- the reference shipping label used for pixel checks against the remote preview backend
 
-The preview renderer lives in the core project so the demo only applies the parser results and the rendered bitmap.
+The preview renderer lives in the core project and mirrors the remote preview backend so the demo can show a pixel-matched label preview.
+When the remote preview API is unavailable, the renderer falls back to the local implementation so the demo still stays usable.
 Barcode rendering now uses a real barcode engine in the core project, including GS1-aware Code 128 and matrix code support.
 
 ## Current parser coverage

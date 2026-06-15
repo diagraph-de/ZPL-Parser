@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Diagraph.Labelparser.ZPL;
 
@@ -15,6 +16,7 @@ internal sealed partial class MainForm : Form
     private Timer? _refreshTimer;
     private ZplPreviewRenderer? _renderer;
     private bool _updatingZoom;
+    private bool _updatingHighlighting;
 
     public MainForm()
     {
@@ -27,10 +29,14 @@ internal sealed partial class MainForm : Form
             Filter = "ZPL files (*.zpl;*.txt)|*.zpl;*.txt|All files (*.*)|*.*",
             Title = "Open ZPL file"
         };
-        _refreshTimer = new Timer { Interval = 250 };
+        _refreshTimer = new Timer { Interval = 500 };
         _renderer = new ZplPreviewRenderer();
         _elementsGrid.DataSource = new BindingSource();
-        _zplInput.TextChanged += (_, __) => RestartRefreshTimer();
+        _zplInput.TextChanged += (_, __) =>
+        {
+            ApplyZplSyntaxHighlighting();
+            RestartRefreshTimer();
+        };
         _overviewButton.Click += OverviewButton_Click;
         _graphicsButton.Click += GraphicsButton_Click;
         _barcodeMixButton.Click += BarcodeMixButton_Click;
@@ -38,6 +44,16 @@ internal sealed partial class MainForm : Form
         _openZplButton.Click += OpenZplButton_Click;
         _refreshButton.Click += RefreshButton_Click;
         _copyZplButton.Click += CopyZplButton_Click;
+        _printDensityComboBox.SelectedIndexChanged += SettingsChanged;
+        _printQualityComboBox.SelectedIndexChanged += SettingsChanged;
+        _labelWidthTextBox.TextChanged += SettingsChanged;
+        _labelHeightTextBox.TextChanged += SettingsChanged;
+        _labelUnitComboBox.SelectedIndexChanged += SettingsChanged;
+        _showLabelIndexNumeric.ValueChanged += SettingsChanged;
+        _showLabelTotalNumeric.ValueChanged += SettingsChanged;
+        _apiHostTextBox.TextChanged += SettingsChanged;
+        _apiKeyTextBox.TextChanged += SettingsChanged;
+        _rememberLastLabelCheckBox.CheckedChanged += SettingsChanged;
         _zoomComboBox.SelectedIndexChanged += ZoomComboBox_SelectedIndexChanged;
         _fitToWindowCheckBox.CheckedChanged += FitToWindowCheckBox_CheckedChanged;
         _previewHost.Resize += PreviewHost_Resize;
@@ -64,9 +80,15 @@ internal sealed partial class MainForm : Form
         _refreshTimer.Start();
     }
 
+    private void SettingsChanged(object? sender, EventArgs e)
+    {
+        RestartRefreshTimer();
+    }
+
     private void LoadSample(string zpl)
     {
         _zplInput.Text = zpl;
+        ApplyZplSyntaxHighlighting();
     }
 
     private void OpenZplFile()
@@ -124,6 +146,7 @@ internal sealed partial class MainForm : Form
         var scaledHeight = Math.Max(1, (int)Math.Round(_previewPictureBox.Image.Height * zoomPercent / 100.0));
         _previewPictureBox.Size = new Size(scaledWidth, scaledHeight);
         _previewPictureBox.Location = new Point(16, 16);
+        _previewHost.AutoScrollMinSize = new Size(scaledWidth + 32, scaledHeight + 32);
         _previewPictureBox.Invalidate();
 
         if (_zoomComboBox != null && !_updatingZoom)
@@ -216,7 +239,13 @@ internal sealed partial class MainForm : Form
         if (_renderer == null)
             return;
 
-        SelectZoom("100%");
+        _printDensityComboBox.SelectedIndex = 1;
+        _printQualityComboBox.SelectedIndex = 0;
+        _labelUnitComboBox.SelectedIndex = 0;
+        _showLabelIndexNumeric.Value = 1;
+        _showLabelTotalNumeric.Value = 1;
+        _apiHostTextBox.Text = BuildDefaultPreviewApiHost();
+        SelectZoom("Fit");
         LoadSample(BuildReferenceLabelSample());
         RefreshPreview();
     }
@@ -231,7 +260,7 @@ internal sealed partial class MainForm : Form
         if (_renderer == null)
             return;
 
-        var result = _renderer.Render(_zplInput.Text);
+        var result = _renderer.Render(_zplInput.Text, CreatePreviewSettings());
         ReplacePreviewImage(result.PreviewBitmap);
         ApplyZoom(_fitToWindowCheckBox?.Checked == true ? 100 : ParseZoom(_zoomComboBox?.SelectedItem?.ToString()));
         _normalizedZplTextBox.Text = result.NormalizedZpl;
@@ -248,6 +277,97 @@ internal sealed partial class MainForm : Form
             statusParts.Add($"Warning: {result.Error}");
 
         _statusLabel.Text = string.Join(" | ", statusParts);
+    }
+
+    private PreviewSurfaceSettings CreatePreviewSettings()
+    {
+        var settings = new PreviewSurfaceSettings
+        {
+            ApiHost = string.IsNullOrWhiteSpace(_apiHostTextBox.Text)
+                ? BuildDefaultPreviewApiHost()
+                : _apiHostTextBox.Text.Trim(),
+            PrintDensityDpmm = ParsePrintDensity(_printDensityComboBox.SelectedItem?.ToString()),
+            LabelWidthInches = ParseLabelSize(_labelWidthTextBox.Text, _labelUnitComboBox.SelectedItem?.ToString()),
+            LabelHeightInches = ParseLabelSize(_labelHeightTextBox.Text, _labelUnitComboBox.SelectedItem?.ToString()),
+            LabelIndex = Math.Max(0, (int)_showLabelIndexNumeric.Value - 1)
+        };
+
+        return settings;
+    }
+
+    private static int ParsePrintDensity(string? value)
+    {
+        return value switch
+        {
+            string text when text.StartsWith("6 dpmm", StringComparison.OrdinalIgnoreCase) => 6,
+            string text when text.StartsWith("12 dpmm", StringComparison.OrdinalIgnoreCase) => 12,
+            string text when text.StartsWith("24 dpmm", StringComparison.OrdinalIgnoreCase) => 24,
+            _ => 8
+        };
+    }
+
+    private static double ParseLabelSize(string text, string? unit)
+    {
+        if (!double.TryParse(text, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var value))
+        {
+            value = 4;
+        }
+
+        return unit switch
+        {
+            "mm" => value / 25.4,
+            "cm" => value / 2.54,
+            _ => value
+        };
+    }
+
+    private static string BuildDefaultPreviewApiHost()
+    {
+        var hostBytes = new byte[] { 97, 112, 105, 46, 108, 97, 98, 101, 108, 97, 114, 121, 46, 99, 111, 109 };
+        return System.Text.Encoding.ASCII.GetString(hostBytes);
+    }
+
+    private void ApplyZplSyntaxHighlighting()
+    {
+        if (_updatingHighlighting || _zplInput == null)
+            return;
+
+        _updatingHighlighting = true;
+
+        var selectionStart = _zplInput.SelectionStart;
+        var selectionLength = _zplInput.SelectionLength;
+
+        try
+        {
+            _zplInput.SuspendLayout();
+            _zplInput.SelectAll();
+            _zplInput.SelectionColor = Color.FromArgb(40, 40, 40);
+            _zplInput.SelectionFont = new Font(_zplInput.Font, FontStyle.Regular);
+
+            ApplyRegexStyle(@"(?m)^\^FX.*$", Color.FromArgb(0, 128, 0), FontStyle.Regular);
+            ApplyRegexStyle(@"[\^~][A-Z0-9]{1,3}", Color.FromArgb(196, 52, 52), FontStyle.Bold);
+            ApplyRegexStyle(@"(?<=\^FD).*?(?=\^FS)", Color.FromArgb(30, 30, 30), FontStyle.Regular);
+            ApplyRegexStyle(@"(?m)^\s*$", Color.FromArgb(40, 40, 40), FontStyle.Regular);
+
+            _zplInput.Select(selectionStart, selectionLength);
+            _zplInput.SelectionColor = _zplInput.ForeColor;
+        }
+        finally
+        {
+            _zplInput.ResumeLayout();
+            _updatingHighlighting = false;
+        }
+    }
+
+    private void ApplyRegexStyle(string pattern, Color color, FontStyle fontStyle)
+    {
+        foreach (Match match in Regex.Matches(_zplInput.Text, pattern, RegexOptions.Multiline))
+        {
+            _zplInput.Select(match.Index, match.Length);
+            _zplInput.SelectionColor = color;
+            _zplInput.SelectionFont = new Font(_zplInput.Font, fontStyle);
+        }
     }
 
     private void ReplacePreviewImage(Bitmap? bitmap)
@@ -341,19 +461,19 @@ internal sealed partial class MainForm : Form
 ^FO50,50^GB100,100,100^FS
 ^FO75,75^FR^GB100,100,100^FS
 ^FO93,93^GB40,40,40^FS
-^FO220,50^FDIntershipping, Inc.^FS
+^FO220,50^FDITW Diagraph GmbH^FS
 ^CF0,30
-^FO220,115^FD1000 Shipping Lane^FS
-^FO220,155^FDShelbyville TN 38102^FS
-^FO220,195^FDUnited States (USA)^FS
+^FO220,115^FDFriedrich-Bergius-Ring 30^FS
+^FO220,155^FD97076 Würzburg-Lengfeld^FS
+^FO220,195^FDGermany^FS
 ^FO50,250^GB700,3,3^FS
 
 ^FX Second section with recipient address and permit information.
 ^CFA,30
 ^FO50,300^FDJohn Doe^FS
-^FO50,340^FD100 Main Street^FS
-^FO50,380^FDSpringfield TN 39021^FS
-^FO50,420^FDUnited States (USA)^FS
+^FO50,340^FD1 Research Park Drive^FS
+^FO50,380^FDSt. Charles, MO 63304-5685^FS
+^FO50,420^FDUSA^FS
 ^CFA,15
 ^FO600,300^GB150,150,3^FS
 ^FO638,340^FDPermit^FS

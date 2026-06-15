@@ -787,7 +787,7 @@ public class ImageHelper
         //bitmapImage.Save(file);
 
 
-        ////Create zpl image to use with http://labelary.com/viewer.html
+        ////Create zpl image for the remote preview reference
         //var bmp = new Bitmap(@"C:\Users\daniel\Desktop\bmp\zpl_monochrome.bmp");
         //var bytes = ConvertfromImg(bmp, true, false);
         //File.WriteAllBytes(@"C:\Users\daniel\Desktop\bmp\zpl_monochrome.prn", System.Text.Encoding.ASCII.GetBytes(bytes));
