@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -12,11 +13,11 @@ namespace ZPLParser.Demo;
 
 internal sealed partial class MainForm : Form
 {
-    private OpenFileDialog? _openFileDialog;
-    private Timer? _refreshTimer;
-    private ZplPreviewRenderer? _renderer;
-    private bool _updatingZoom;
+    private readonly OpenFileDialog? _openFileDialog;
+    private readonly Timer? _refreshTimer;
+    private readonly ZplPreviewRenderer? _renderer;
     private bool _updatingHighlighting;
+    private bool _updatingZoom;
 
     public MainForm()
     {
@@ -51,8 +52,6 @@ internal sealed partial class MainForm : Form
         _labelUnitComboBox.SelectedIndexChanged += SettingsChanged;
         _showLabelIndexNumeric.ValueChanged += SettingsChanged;
         _showLabelTotalNumeric.ValueChanged += SettingsChanged;
-        _apiHostTextBox.TextChanged += SettingsChanged;
-        _apiKeyTextBox.TextChanged += SettingsChanged;
         _rememberLastLabelCheckBox.CheckedChanged += SettingsChanged;
         _zoomComboBox.SelectedIndexChanged += ZoomComboBox_SelectedIndexChanged;
         _fitToWindowCheckBox.CheckedChanged += FitToWindowCheckBox_CheckedChanged;
@@ -244,7 +243,6 @@ internal sealed partial class MainForm : Form
         _labelUnitComboBox.SelectedIndex = 0;
         _showLabelIndexNumeric.Value = 1;
         _showLabelTotalNumeric.Value = 1;
-        _apiHostTextBox.Text = BuildDefaultPreviewApiHost();
         SelectZoom("Fit");
         LoadSample(BuildReferenceLabelSample());
         RefreshPreview();
@@ -283,9 +281,6 @@ internal sealed partial class MainForm : Form
     {
         var settings = new PreviewSurfaceSettings
         {
-            ApiHost = string.IsNullOrWhiteSpace(_apiHostTextBox.Text)
-                ? BuildDefaultPreviewApiHost()
-                : _apiHostTextBox.Text.Trim(),
             PrintDensityDpmm = ParsePrintDensity(_printDensityComboBox.SelectedItem?.ToString()),
             LabelWidthInches = ParseLabelSize(_labelWidthTextBox.Text, _labelUnitComboBox.SelectedItem?.ToString()),
             LabelHeightInches = ParseLabelSize(_labelHeightTextBox.Text, _labelUnitComboBox.SelectedItem?.ToString()),
@@ -308,11 +303,9 @@ internal sealed partial class MainForm : Form
 
     private static double ParseLabelSize(string text, string? unit)
     {
-        if (!double.TryParse(text, System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out var value))
-        {
+        if (!double.TryParse(text, NumberStyles.Float,
+                CultureInfo.InvariantCulture, out var value))
             value = 4;
-        }
 
         return unit switch
         {
@@ -320,12 +313,6 @@ internal sealed partial class MainForm : Form
             "cm" => value / 2.54,
             _ => value
         };
-    }
-
-    private static string BuildDefaultPreviewApiHost()
-    {
-        var hostBytes = new byte[] { 97, 112, 105, 46, 108, 97, 98, 101, 108, 97, 114, 121, 46, 99, 111, 109 };
-        return System.Text.Encoding.ASCII.GetString(hostBytes);
     }
 
     private void ApplyZplSyntaxHighlighting()

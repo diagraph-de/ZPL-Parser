@@ -27,10 +27,9 @@ It includes sample buttons for:
 - a mixed label with text, boxes, barcodes, and graphics
 - a graphics-focused sample with `^GF`, `~DG`, and `^XG`
 - a barcode-focused sample
-- the reference shipping label used for pixel checks against the remote preview backend
+- the reference shipping label used for pixel checks against the local renderer
 
-The preview renderer lives in the core project and mirrors the remote preview backend so the demo can show a pixel-matched label preview.
-When the remote preview API is unavailable, the renderer falls back to the local implementation so the demo still stays usable.
+The preview renderer lives in the core project and renders labels locally so the demo can show a pixel-matched label preview.
 Barcode rendering now uses a real barcode engine in the core project, including GS1-aware Code 128 and matrix code support.
 
 ## Current parser coverage

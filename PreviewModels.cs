@@ -19,8 +19,6 @@ public sealed class PreviewRenderResult
 public sealed class PreviewSurfaceSettings
 {
     public static PreviewSurfaceSettings Default { get; } = new();
-
-    public string ApiHost { get; set; } = string.Empty;
     public int PrintDensityDpmm { get; set; } = 8;
     public double LabelWidthInches { get; set; } = 4;
     public double LabelHeightInches { get; set; } = 6;

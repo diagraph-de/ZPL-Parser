@@ -365,7 +365,8 @@ partial class MainForm
         _apiSettingsLabel.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
         _apiSettingsLabel.Size = new System.Drawing.Size(75, 28);
         _apiSettingsLabel.TabIndex = 13;
-        _apiSettingsLabel.Text = "API Settings:";
+        _apiSettingsLabel.Text = "Renderer Settings:";
+        _apiSettingsLabel.Visible = false;
         // 
         // _apiHostTextBox
         // 
@@ -373,7 +374,8 @@ partial class MainForm
         _apiHostTextBox.Name = "_apiHostTextBox";
         _apiHostTextBox.Size = new System.Drawing.Size(185, 20);
         _apiHostTextBox.TabIndex = 14;
-        _apiHostTextBox.Text = BuildDefaultPreviewApiHost();
+        _apiHostTextBox.Text = string.Empty;
+        _apiHostTextBox.Visible = false;
         _previewSettingsLayout.SetColumnSpan(_apiHostTextBox, 2);
         // 
         // _apiKeyTextBox
@@ -383,6 +385,7 @@ partial class MainForm
         _apiKeyTextBox.Size = new System.Drawing.Size(180, 20);
         _apiKeyTextBox.TabIndex = 15;
         _apiKeyTextBox.UseSystemPasswordChar = true;
+        _apiKeyTextBox.Visible = false;
         _previewSettingsLayout.SetColumnSpan(_apiKeyTextBox, 2);
         // 
         // _rememberLastLabelCheckBox
@@ -550,6 +553,7 @@ partial class MainForm
         _zoomComboBox.Name = "_zoomComboBox";
         _zoomComboBox.Size = new System.Drawing.Size(90, 21);
         _zoomComboBox.TabIndex = 0;
+        _zoomComboBox.SelectedIndex = 0;
         // 
         // _fitToWindowCheckBox
         // 
@@ -560,6 +564,7 @@ partial class MainForm
         _fitToWindowCheckBox.Padding = new System.Windows.Forms.Padding(8, 5, 0, 0);
         _fitToWindowCheckBox.Size = new System.Drawing.Size(96, 22);
         _fitToWindowCheckBox.TabIndex = 1;
+        _fitToWindowCheckBox.Checked = true;
         _fitToWindowCheckBox.Text = "Fit to window";
         // 
         // _normalizedZplTab
