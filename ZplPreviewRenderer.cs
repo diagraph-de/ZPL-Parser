@@ -304,25 +304,78 @@ public sealed class ZplPreviewRenderer
                 DrawCodabar(graphics, barcodeAnsiCodabar, state, warnings);
                 break;
             case BarcodeQR barcodeQR:
-                DrawQrCode(graphics, barcodeQR, state, warnings);
+            {
+                var content = ResolveBarcodeContent(barcodeQR);
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    state.PendingQrBarcode = barcodeQR;
+                    break;
+                }
+
+                DrawQrCode(graphics, barcodeQR, content, state, warnings);
                 break;
+            }
             case BarcodeDatamatrix barcodeDatamatrix:
-                DrawDataMatrix(graphics, barcodeDatamatrix, state, warnings);
+            {
+                var content = ResolveBarcodeContent(barcodeDatamatrix);
+                if (string.IsNullOrWhiteSpace(content))
+                {
+                    state.PendingDataMatrixBarcode = barcodeDatamatrix;
+                    break;
+                }
+
+                DrawDataMatrix(graphics, barcodeDatamatrix, content, state, warnings);
                 break;
+            }
             case GraphicField graphicField:
                 DrawImage(graphics, ResolveOrigin(graphicField.Origin, state), state, graphicField.Bitmap,
                     graphicField.Bitmap?.Width ?? 120, graphicField.Bitmap?.Height ?? 80);
                 break;
             case DownloadGraphic downloadGraphic:
-                DrawImage(graphics, null, state, downloadGraphic.Image, downloadGraphic.Image?.Width ?? 120,
-                    downloadGraphic.Image?.Height ?? 80);
                 break;
             case RecallGraphic recallGraphic:
             {
                 var key = GraphicKey(recallGraphic.StorageDevice, recallGraphic.ImageName, recallGraphic.Extension);
                 storedGraphics.TryGetValue(key, out var image);
-                DrawImage(graphics, ResolveOrigin(recallGraphic.Origin, state), state, image, image?.Width ?? 120,
-                    image?.Height ?? 80);
+                var width = image?.Width ?? 120;
+                var height = image?.Height ?? 80;
+                if (recallGraphic.MagnificationFactorX > 0)
+                    width *= recallGraphic.MagnificationFactorX;
+                if (recallGraphic.MagnificationFactorY > 0)
+                    height *= recallGraphic.MagnificationFactorY;
+                DrawImage(graphics, ResolveOrigin(recallGraphic.Origin, state), state, image, width, height);
+                break;
+            }
+            case FieldData fieldData:
+            {
+                if (state.PendingQrBarcode != null)
+                {
+                    var content = ExtractStructuredBarcodeContent(fieldData.Data);
+                    if (!string.IsNullOrWhiteSpace(content))
+                    {
+                        var pendingQrBarcode = state.PendingQrBarcode;
+                        state.PendingQrBarcode = null;
+                        state.SuppressNextTextField = true;
+                        DrawQrCode(graphics, pendingQrBarcode, content, state, warnings);
+                    }
+
+                    break;
+                }
+
+                if (state.PendingDataMatrixBarcode != null)
+                {
+                    var content = ExtractStructuredBarcodeContent(fieldData.Data);
+                    if (!string.IsNullOrWhiteSpace(content))
+                    {
+                        var pendingDataMatrixBarcode = state.PendingDataMatrixBarcode;
+                        state.PendingDataMatrixBarcode = null;
+                        state.SuppressNextTextField = true;
+                        DrawDataMatrix(graphics, pendingDataMatrixBarcode, content, state, warnings);
+                    }
+
+                    break;
+                }
+
                 break;
             }
             case FieldOrigin fieldOrigin:
@@ -341,6 +394,11 @@ public sealed class ZplPreviewRenderer
                 state.PendingBarcodeOrigin = null;
                 break;
             case TextField textField:
+                if (state.SuppressNextTextField)
+                {
+                    state.SuppressNextTextField = false;
+                    break;
+                }
                 DrawTextField(graphics, textField, state, state.ReverseField || textField.ReversePrint);
                 break;
         }
@@ -361,9 +419,9 @@ public sealed class ZplPreviewRenderer
         if ((textField.Text?.Length ?? 0) <= 2 && (textField.Font?.FontHeight ?? 0) >= 100)
             rect = new Rectangle(
                 rect.Left,
-                Math.Max(0, rect.Top - Math.Max(24, (textField.Font?.FontHeight ?? 0) / 3)),
-                Math.Max(rect.Width, Math.Max(300, (textField.Font?.FontHeight ?? 0) + 140)),
-                Math.Max(rect.Height, Math.Max(260, (textField.Font?.FontHeight ?? 0) + 60)));
+                Math.Max(0, rect.Top - Math.Max(18, (textField.Font?.FontHeight ?? 0) / 4)),
+                Math.Max(rect.Width, Math.Max(200, (textField.Font?.FontHeight ?? 0) + 24)),
+                Math.Max(rect.Height, Math.Max(220, (textField.Font?.FontHeight ?? 0) + 46)));
         else
             rect = new Rectangle(rect.Left, rect.Top,
                 Math.Max(rect.Width, Math.Max(2000, EstimateTextWidth(textField.Text, textField.Font) + 20)),
@@ -386,7 +444,10 @@ public sealed class ZplPreviewRenderer
         if (isBarcodeLabel)
             stringFormat.FormatFlags |= StringFormatFlags.NoWrap;
         else if ((textField.Text?.Length ?? 0) <= 2 && (textField.Font?.FontHeight ?? 0) >= 100)
+        {
             stringFormat.Alignment = StringAlignment.Center;
+            stringFormat.LineAlignment = StringAlignment.Center;
+        }
 
         graphics.DrawString(textField.Text ?? string.Empty, font, foreBrush, rect, stringFormat);
     }
@@ -516,8 +577,13 @@ public sealed class ZplPreviewRenderer
         graphics.DrawEllipse(pen, rect);
         using var font = new Font("Segoe UI Symbol", Math.Max(8, rect.Height / 2), FontStyle.Bold, GraphicsUnit.Pixel);
         using var brush = new SolidBrush(color);
-        graphics.DrawString(symbol.Character.ToString().Substring(0, 1), font, brush, rect,
-            StringFormat.GenericDefault);
+        using var stringFormat = new StringFormat(StringFormat.GenericTypographic)
+        {
+            Alignment = StringAlignment.Center,
+            LineAlignment = StringAlignment.Center,
+            Trimming = StringTrimming.None
+        };
+        graphics.DrawString(symbol.Character.ToString().Substring(0, 1), font, brush, rect, stringFormat);
     }
 
     private static void DrawCode39(Graphics graphics, BarcodeCode39 barcode, RenderState state, List<string> warnings)
@@ -597,7 +663,8 @@ public sealed class ZplPreviewRenderer
         var barcodeDefaults = state.BarcodeDefaults ?? BarcodeFieldDefault.Current;
         var moduleWidth = Math.Max(1, barcodeDefaults?.ModuleWidth ?? 2);
         var barHeight = Math.Max(1, barcode.Height > 0 ? barcode.Height : barcodeDefaults?.Height ?? 10);
-        var content = ResolveBarcodeContent(barcode);
+        var displayContent = ResolveBarcodeContent(barcode);
+        var content = NormalizeCodabarContent(displayContent);
         content = ApplyCodabarChecksum(content, barcode.CheckDigit);
         content =
             $"{char.ToUpperInvariant(barcode.StartCharacter)}{content}{char.ToUpperInvariant(barcode.StopCharacter)}";
@@ -621,19 +688,19 @@ public sealed class ZplPreviewRenderer
             background,
             10,
             false,
-            false);
+            false,
+            displayContent);
         ApplyOrientation(bitmap, barcode.Orientation);
         DrawBitmap(graphics, ResolveOrigin(barcode.Origin, state), state, bitmap);
-        state.PendingBarcodeText = content;
+        state.PendingBarcodeText = displayContent;
         state.PendingBarcodeOrigin = ResolveOrigin(barcode.Origin, state);
         state.PendingBarcodeBounds = new Rectangle(
             state.OffsetX + (ResolveOrigin(barcode.Origin, state)?.PositionX ?? 0),
             state.OffsetY + (ResolveOrigin(barcode.Origin, state)?.PositionY ?? 0), bitmap.Width, bitmap.Height);
     }
 
-    private static void DrawQrCode(Graphics graphics, BarcodeQR barcode, RenderState state, List<string> warnings)
+    private static void DrawQrCode(Graphics graphics, BarcodeQR barcode, string content, RenderState state, List<string> warnings)
     {
-        var content = ResolveBarcodeContent(barcode);
         if (string.IsNullOrWhiteSpace(content))
         {
             warnings.Add("QR code skipped because content is empty.");
@@ -653,9 +720,6 @@ public sealed class ZplPreviewRenderer
         if (IsGs1Payload(content))
             hints[EncodeHintType.GS1_FORMAT] = true;
 
-        if (barcode.Model > 0)
-            hints[EncodeHintType.QR_VERSION] = barcode.Model;
-
         using var bitmap = CreateMatrixBarcodeBitmap(BarcodeFormat.QR_CODE, content, hints,
             scale,
             foreground, background);
@@ -666,10 +730,9 @@ public sealed class ZplPreviewRenderer
         state.PendingBarcodeBounds = null;
     }
 
-    private static void DrawDataMatrix(Graphics graphics, BarcodeDatamatrix barcode, RenderState state,
+    private static void DrawDataMatrix(Graphics graphics, BarcodeDatamatrix barcode, string content, RenderState state,
         List<string> warnings)
     {
-        var content = ResolveBarcodeContent(barcode);
         if (string.IsNullOrWhiteSpace(content))
         {
             warnings.Add("Data Matrix skipped because content is empty.");
@@ -738,7 +801,7 @@ public sealed class ZplPreviewRenderer
         var size = Math.Max(8f, isFontA ? rawSize * 0.8f : rawSize * 0.9f);
         var family = isFontA
             ? "Courier New"
-            : "Arial Narrow";
+            : "Arial";
         return new Font(family, size, bold ? FontStyle.Bold : FontStyle.Regular, GraphicsUnit.Pixel);
     }
 
@@ -794,6 +857,21 @@ public sealed class ZplPreviewRenderer
         return content + alphabet[sum % 16];
     }
 
+    private static string NormalizeCodabarContent(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return string.Empty;
+
+        var builder = new StringBuilder(content.Length);
+        foreach (var character in content)
+        {
+            if (char.IsDigit(character) || "-$:/.+".IndexOf(character) >= 0)
+                builder.Append(character);
+        }
+
+        return builder.ToString();
+    }
+
     private static bool IsGs1Payload(string? content)
     {
         if (string.IsNullOrEmpty(content))
@@ -826,7 +904,7 @@ public sealed class ZplPreviewRenderer
     private static Bitmap CreateLinearBarcodeBitmap(BarcodeFormat format, string content, int moduleWidth,
         int barHeight,
         bool printInterpretationLine, bool printInterpretationLineAboveCode, Color foreground, Color background,
-        int marginModules, bool gs1Format, bool forceCodesetB)
+        int marginModules, bool gs1Format, bool forceCodesetB, string? displayContent = null)
     {
         var writer = new MultiFormatWriter();
         var hints = new Dictionary<EncodeHintType, object>();
@@ -838,8 +916,8 @@ public sealed class ZplPreviewRenderer
             hints[EncodeHintType.CODE128_FORCE_CODESET_B] = true;
 
         var matrix = writer.encode(content, format, 0, 0, hints);
-        var textHeight = printInterpretationLine ? Math.Max(20, barHeight / 4) : 0;
-        var textSpacing = printInterpretationLine ? 6 : 0;
+        var textHeight = printInterpretationLine ? Math.Max(18, barHeight / 4) : 0;
+        var textSpacing = printInterpretationLine ? 4 : 0;
         var totalHeight = barHeight + textHeight + textSpacing;
         var barcodeTop = printInterpretationLine && printInterpretationLineAboveCode
             ? textHeight + textSpacing
@@ -847,28 +925,26 @@ public sealed class ZplPreviewRenderer
         var textTop = printInterpretationLine && printInterpretationLineAboveCode
             ? 0
             : barHeight + textSpacing;
+        var quietZone = Math.Max(0, marginModules) * moduleWidth;
+        var matrixWidth = Math.Max(1, matrix.Width * moduleWidth);
+        var bitmapWidth = Math.Max(1, matrixWidth + (quietZone * 2));
 
-        var bitmap = new Bitmap(Math.Max(1, matrix.Width * moduleWidth), Math.Max(1, totalHeight),
+        var bitmap = new Bitmap(bitmapWidth, Math.Max(1, totalHeight),
             PixelFormat.Format24bppRgb);
         using var graphics = Graphics.FromImage(bitmap);
         graphics.Clear(background);
         using var barBrush = new SolidBrush(foreground);
 
-        RenderMatrix(graphics, matrix, moduleWidth, barcodeTop, barHeight, barBrush);
+        RenderMatrix(graphics, matrix, moduleWidth, quietZone, barcodeTop, barHeight, barBrush);
 
         if (printInterpretationLine && !string.IsNullOrEmpty(content))
         {
-            using var font = new Font("Arial", Math.Max(10, barHeight / 6.8f), FontStyle.Regular,
+            using var font = new Font("Arial Narrow", Math.Max(9, barHeight / 7.6f), FontStyle.Regular,
                 GraphicsUnit.Pixel);
             var textRect = new Rectangle(0, textTop, bitmap.Width, Math.Max(1, textHeight));
-            using var brush = new SolidBrush(foreground);
-            using var stringFormat = new StringFormat(StringFormat.GenericTypographic)
-            {
-                Alignment = StringAlignment.Center,
-                LineAlignment = StringAlignment.Center,
-                Trimming = StringTrimming.None
-            };
-            graphics.DrawString(content, font, brush, textRect, stringFormat);
+            var flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
+                        TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix | TextFormatFlags.NoClipping;
+            TextRenderer.DrawText(graphics, displayContent ?? content, font, textRect, foreground, flags);
         }
 
         return bitmap;
@@ -885,17 +961,17 @@ public sealed class ZplPreviewRenderer
         using var graphics = Graphics.FromImage(bitmap);
         graphics.Clear(background);
         using var barBrush = new SolidBrush(foreground);
-        RenderMatrix(graphics, matrix, scale, 0, scale, barBrush);
+        RenderMatrix(graphics, matrix, scale, 0, 0, scale, barBrush);
         return bitmap;
     }
 
-    private static void RenderMatrix(Graphics graphics, BitMatrix matrix, int scale, int topOffset, int rowScale,
+    private static void RenderMatrix(Graphics graphics, BitMatrix matrix, int scale, int leftOffset, int topOffset, int rowScale,
         Brush brush)
     {
         for (var y = 0; y < matrix.Height; y++)
         for (var x = 0; x < matrix.Width; x++)
             if (matrix[x, y])
-                graphics.FillRectangle(brush, x * scale, topOffset + y * rowScale, scale, rowScale);
+                graphics.FillRectangle(brush, leftOffset + x * scale, topOffset + y * rowScale, scale, rowScale);
     }
 
     private static void ApplyOrientation(Bitmap bitmap, Enums.Orientation orientation)
@@ -996,5 +1072,8 @@ public sealed class ZplPreviewRenderer
         public string? PendingBarcodeText { get; set; }
         public FieldOrigin? PendingBarcodeOrigin { get; set; }
         public Rectangle? PendingBarcodeBounds { get; set; }
+        public BarcodeQR? PendingQrBarcode { get; set; }
+        public BarcodeDatamatrix? PendingDataMatrixBarcode { get; set; }
+        public bool SuppressNextTextField { get; set; }
     }
 }

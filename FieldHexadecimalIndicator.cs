@@ -16,7 +16,8 @@ public class FieldHexadecimalIndicator : FieldElement
         this.elementBytes = elementBytes;
 
         Current = this;
-        Indicator = Convert.ToChar(this.properties.Split(',')[0]);
+        var value = this.properties.Split(',')[0];
+        Indicator = string.IsNullOrWhiteSpace(value) ? '_' : value[0];
     }
 
     public FieldHexadecimalIndicator(char indicator)

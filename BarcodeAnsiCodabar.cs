@@ -70,11 +70,11 @@ public class BarcodeAnsiCodabar : Barcode1D
         PrintInterpretationLine = sp.Length > 3 && sp[3].ToUpper() == Enums.YesNo.Y.ToString();
         PrintInterpretationLineAboveCode = sp.Length > 4 && sp[4].ToUpper() == Enums.YesNo.Y.ToString();
 
-        if (sp.Length > 5)
-            StartCharacter = sp[3].ToCharArray()[0];
+        if (sp.Length > 5 && !string.IsNullOrEmpty(sp[5]))
+            StartCharacter = sp[5][0];
 
-        if (sp.Length > 6)
-            StartCharacter = sp[3].ToCharArray()[6];
+        if (sp.Length > 6 && !string.IsNullOrEmpty(sp[6]))
+            StopCharacter = sp[6][0];
     }
 
     public static BarcodeAnsiCodabar Current

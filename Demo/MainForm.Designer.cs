@@ -133,22 +133,21 @@ partial class MainForm
         // 
         _rootSplit.Panel2.Controls.Add(_rightTabs);
         _rootSplit.Size = new System.Drawing.Size(1055, 542);
-        _rootSplit.SplitterDistance = 615;
+        _rootSplit.SplitterDistance = 612;
         _rootSplit.TabIndex = 0;
         // 
         // _zplInput
         // 
         _zplInput.AcceptsTab = true;
-        _zplInput.Dock = System.Windows.Forms.DockStyle.Fill;
         _zplInput.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
         _zplInput.DetectUrls = false;
+        _zplInput.Dock = System.Windows.Forms.DockStyle.Fill;
         _zplInput.Font = new System.Drawing.Font("Consolas", 10F);
         _zplInput.Location = new System.Drawing.Point(0, 39);
-        _zplInput.Multiline = true;
         _zplInput.Name = "_zplInput";
-        _zplInput.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Both;
-        _zplInput.Size = new System.Drawing.Size(615, 503);
+        _zplInput.Size = new System.Drawing.Size(612, 291);
         _zplInput.TabIndex = 0;
+        _zplInput.Text = "";
         _zplInput.WordWrap = false;
         // 
         // _leftToolbar
@@ -164,9 +163,86 @@ partial class MainForm
         _leftToolbar.Location = new System.Drawing.Point(0, 0);
         _leftToolbar.Name = "_leftToolbar";
         _leftToolbar.Padding = new System.Windows.Forms.Padding(8, 6, 8, 6);
-        _leftToolbar.Size = new System.Drawing.Size(615, 39);
+        _leftToolbar.Size = new System.Drawing.Size(612, 39);
         _leftToolbar.TabIndex = 1;
         _leftToolbar.WrapContents = false;
+        // 
+        // _overviewButton
+        // 
+        _overviewButton.AutoSize = true;
+        _overviewButton.Location = new System.Drawing.Point(8, 6);
+        _overviewButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
+        _overviewButton.Name = "_overviewButton";
+        _overviewButton.Size = new System.Drawing.Size(75, 23);
+        _overviewButton.TabIndex = 0;
+        _overviewButton.TabStop = false;
+        _overviewButton.Text = "Overview";
+        // 
+        // _graphicsButton
+        // 
+        _graphicsButton.AutoSize = true;
+        _graphicsButton.Location = new System.Drawing.Point(91, 6);
+        _graphicsButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
+        _graphicsButton.Name = "_graphicsButton";
+        _graphicsButton.Size = new System.Drawing.Size(75, 23);
+        _graphicsButton.TabIndex = 1;
+        _graphicsButton.TabStop = false;
+        _graphicsButton.Text = "Graphics";
+        // 
+        // _barcodeMixButton
+        // 
+        _barcodeMixButton.AutoSize = true;
+        _barcodeMixButton.Location = new System.Drawing.Point(174, 6);
+        _barcodeMixButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
+        _barcodeMixButton.Name = "_barcodeMixButton";
+        _barcodeMixButton.Size = new System.Drawing.Size(76, 23);
+        _barcodeMixButton.TabIndex = 2;
+        _barcodeMixButton.TabStop = false;
+        _barcodeMixButton.Text = "Barcode Mix";
+        // 
+        // _labelButton
+        // 
+        _labelButton.AutoSize = true;
+        _labelButton.Location = new System.Drawing.Point(258, 6);
+        _labelButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
+        _labelButton.Name = "_labelButton";
+        _labelButton.Size = new System.Drawing.Size(75, 23);
+        _labelButton.TabIndex = 3;
+        _labelButton.TabStop = false;
+        _labelButton.Text = "Label";
+        // 
+        // _openZplButton
+        // 
+        _openZplButton.AutoSize = true;
+        _openZplButton.Location = new System.Drawing.Point(341, 6);
+        _openZplButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
+        _openZplButton.Name = "_openZplButton";
+        _openZplButton.Size = new System.Drawing.Size(75, 23);
+        _openZplButton.TabIndex = 4;
+        _openZplButton.TabStop = false;
+        _openZplButton.Text = "Open ZPL";
+        // 
+        // _refreshButton
+        // 
+        _refreshButton.AutoSize = true;
+        _refreshButton.Location = new System.Drawing.Point(424, 6);
+        _refreshButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
+        _refreshButton.Name = "_refreshButton";
+        _refreshButton.Size = new System.Drawing.Size(75, 23);
+        _refreshButton.TabIndex = 5;
+        _refreshButton.TabStop = false;
+        _refreshButton.Text = "Refresh";
+        // 
+        // _copyZplButton
+        // 
+        _copyZplButton.AutoSize = true;
+        _copyZplButton.Location = new System.Drawing.Point(507, 6);
+        _copyZplButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
+        _copyZplButton.Name = "_copyZplButton";
+        _copyZplButton.Size = new System.Drawing.Size(75, 23);
+        _copyZplButton.TabIndex = 6;
+        _copyZplButton.TabStop = false;
+        _copyZplButton.Text = "Copy ZPL";
         // 
         // _leftFooterPanel
         // 
@@ -175,7 +251,7 @@ partial class MainForm
         _leftFooterPanel.Location = new System.Drawing.Point(0, 330);
         _leftFooterPanel.Name = "_leftFooterPanel";
         _leftFooterPanel.Padding = new System.Windows.Forms.Padding(8, 4, 8, 8);
-        _leftFooterPanel.Size = new System.Drawing.Size(615, 212);
+        _leftFooterPanel.Size = new System.Drawing.Size(612, 212);
         _leftFooterPanel.TabIndex = 2;
         // 
         // _previewSettingsGroup
@@ -370,23 +446,22 @@ partial class MainForm
         // 
         // _apiHostTextBox
         // 
+        _previewSettingsLayout.SetColumnSpan(_apiHostTextBox, 2);
         _apiHostTextBox.Location = new System.Drawing.Point(84, 87);
         _apiHostTextBox.Name = "_apiHostTextBox";
         _apiHostTextBox.Size = new System.Drawing.Size(185, 20);
         _apiHostTextBox.TabIndex = 14;
-        _apiHostTextBox.Text = string.Empty;
         _apiHostTextBox.Visible = false;
-        _previewSettingsLayout.SetColumnSpan(_apiHostTextBox, 2);
         // 
         // _apiKeyTextBox
         // 
+        _previewSettingsLayout.SetColumnSpan(_apiKeyTextBox, 2);
         _apiKeyTextBox.Location = new System.Drawing.Point(295, 87);
         _apiKeyTextBox.Name = "_apiKeyTextBox";
         _apiKeyTextBox.Size = new System.Drawing.Size(180, 20);
         _apiKeyTextBox.TabIndex = 15;
         _apiKeyTextBox.UseSystemPasswordChar = true;
         _apiKeyTextBox.Visible = false;
-        _previewSettingsLayout.SetColumnSpan(_apiKeyTextBox, 2);
         // 
         // _rememberLastLabelCheckBox
         // 
@@ -399,83 +474,6 @@ partial class MainForm
         _rememberLastLabelCheckBox.Text = "Remember my last label (stored locally)";
         _rememberLastLabelCheckBox.UseVisualStyleBackColor = true;
         // 
-        // _overviewButton
-        // 
-        _overviewButton.AutoSize = true;
-        _overviewButton.Location = new System.Drawing.Point(8, 6);
-        _overviewButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
-        _overviewButton.Name = "_overviewButton";
-        _overviewButton.Size = new System.Drawing.Size(75, 23);
-        _overviewButton.TabIndex = 0;
-        _overviewButton.TabStop = false;
-        _overviewButton.Text = "Overview";
-        // 
-        // _graphicsButton
-        // 
-        _graphicsButton.AutoSize = true;
-        _graphicsButton.Location = new System.Drawing.Point(91, 6);
-        _graphicsButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
-        _graphicsButton.Name = "_graphicsButton";
-        _graphicsButton.Size = new System.Drawing.Size(75, 23);
-        _graphicsButton.TabIndex = 1;
-        _graphicsButton.TabStop = false;
-        _graphicsButton.Text = "Graphics";
-        // 
-        // _barcodeMixButton
-        // 
-        _barcodeMixButton.AutoSize = true;
-        _barcodeMixButton.Location = new System.Drawing.Point(174, 6);
-        _barcodeMixButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
-        _barcodeMixButton.Name = "_barcodeMixButton";
-        _barcodeMixButton.Size = new System.Drawing.Size(76, 23);
-        _barcodeMixButton.TabIndex = 2;
-        _barcodeMixButton.TabStop = false;
-        _barcodeMixButton.Text = "Barcode Mix";
-        // 
-        // _labelButton
-        // 
-        _labelButton.AutoSize = true;
-        _labelButton.Location = new System.Drawing.Point(258, 6);
-        _labelButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
-        _labelButton.Name = "_labelButton";
-        _labelButton.Size = new System.Drawing.Size(75, 23);
-        _labelButton.TabIndex = 3;
-        _labelButton.TabStop = false;
-        _labelButton.Text = "Label";
-        // 
-        // _openZplButton
-        // 
-        _openZplButton.AutoSize = true;
-        _openZplButton.Location = new System.Drawing.Point(341, 6);
-        _openZplButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
-        _openZplButton.Name = "_openZplButton";
-        _openZplButton.Size = new System.Drawing.Size(75, 23);
-        _openZplButton.TabIndex = 4;
-        _openZplButton.TabStop = false;
-        _openZplButton.Text = "Open ZPL";
-        // 
-        // _refreshButton
-        // 
-        _refreshButton.AutoSize = true;
-        _refreshButton.Location = new System.Drawing.Point(424, 6);
-        _refreshButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
-        _refreshButton.Name = "_refreshButton";
-        _refreshButton.Size = new System.Drawing.Size(75, 23);
-        _refreshButton.TabIndex = 5;
-        _refreshButton.TabStop = false;
-        _refreshButton.Text = "Refresh";
-        // 
-        // _copyZplButton
-        // 
-        _copyZplButton.AutoSize = true;
-        _copyZplButton.Location = new System.Drawing.Point(507, 6);
-        _copyZplButton.Margin = new System.Windows.Forms.Padding(0, 0, 8, 0);
-        _copyZplButton.Name = "_copyZplButton";
-        _copyZplButton.Size = new System.Drawing.Size(75, 23);
-        _copyZplButton.TabIndex = 6;
-        _copyZplButton.TabStop = false;
-        _copyZplButton.Text = "Copy ZPL";
-        // 
         // _rightTabs
         // 
         _rightTabs.Controls.Add(_previewTab);
@@ -486,7 +484,7 @@ partial class MainForm
         _rightTabs.Location = new System.Drawing.Point(0, 0);
         _rightTabs.Name = "_rightTabs";
         _rightTabs.SelectedIndex = 0;
-        _rightTabs.Size = new System.Drawing.Size(436, 542);
+        _rightTabs.Size = new System.Drawing.Size(439, 542);
         _rightTabs.TabIndex = 1;
         // 
         // _previewTab
@@ -495,7 +493,7 @@ partial class MainForm
         _previewTab.Controls.Add(_previewToolbar);
         _previewTab.Location = new System.Drawing.Point(4, 22);
         _previewTab.Name = "_previewTab";
-        _previewTab.Size = new System.Drawing.Size(428, 516);
+        _previewTab.Size = new System.Drawing.Size(431, 516);
         _previewTab.TabIndex = 0;
         _previewTab.Text = "Preview";
         // 
@@ -508,13 +506,14 @@ partial class MainForm
         _previewHost.Location = new System.Drawing.Point(0, 36);
         _previewHost.Name = "_previewHost";
         _previewHost.Padding = new System.Windows.Forms.Padding(16);
-        _previewHost.Size = new System.Drawing.Size(428, 480);
+        _previewHost.Size = new System.Drawing.Size(431, 480);
         _previewHost.TabIndex = 0;
         // 
         // _previewPictureBox
         // 
+        _previewPictureBox.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
         _previewPictureBox.BackColor = System.Drawing.Color.White;
-        _previewPictureBox.Location = new System.Drawing.Point(16, 16);
+        _previewPictureBox.Location = new System.Drawing.Point(19, 16);
         _previewPictureBox.Name = "_previewPictureBox";
         _previewPictureBox.Size = new System.Drawing.Size(396, 448);
         _previewPictureBox.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
@@ -530,7 +529,7 @@ partial class MainForm
         _previewToolbar.Location = new System.Drawing.Point(0, 0);
         _previewToolbar.Name = "_previewToolbar";
         _previewToolbar.Padding = new System.Windows.Forms.Padding(8, 6, 8, 6);
-        _previewToolbar.Size = new System.Drawing.Size(428, 36);
+        _previewToolbar.Size = new System.Drawing.Size(431, 36);
         _previewToolbar.TabIndex = 1;
         // 
         // _zoomLabel
@@ -553,18 +552,18 @@ partial class MainForm
         _zoomComboBox.Name = "_zoomComboBox";
         _zoomComboBox.Size = new System.Drawing.Size(90, 21);
         _zoomComboBox.TabIndex = 0;
-        _zoomComboBox.SelectedIndex = 0;
         // 
         // _fitToWindowCheckBox
         // 
         _fitToWindowCheckBox.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
         _fitToWindowCheckBox.AutoSize = true;
-        _fitToWindowCheckBox.Location = new System.Drawing.Point(321, 6);
+        _fitToWindowCheckBox.Checked = true;
+        _fitToWindowCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+        _fitToWindowCheckBox.Location = new System.Drawing.Point(324, 6);
         _fitToWindowCheckBox.Name = "_fitToWindowCheckBox";
         _fitToWindowCheckBox.Padding = new System.Windows.Forms.Padding(8, 5, 0, 0);
         _fitToWindowCheckBox.Size = new System.Drawing.Size(96, 22);
         _fitToWindowCheckBox.TabIndex = 1;
-        _fitToWindowCheckBox.Checked = true;
         _fitToWindowCheckBox.Text = "Fit to window";
         // 
         // _normalizedZplTab
@@ -572,7 +571,7 @@ partial class MainForm
         _normalizedZplTab.Controls.Add(_normalizedZplTextBox);
         _normalizedZplTab.Location = new System.Drawing.Point(4, 22);
         _normalizedZplTab.Name = "_normalizedZplTab";
-        _normalizedZplTab.Size = new System.Drawing.Size(428, 516);
+        _normalizedZplTab.Size = new System.Drawing.Size(543, 516);
         _normalizedZplTab.TabIndex = 1;
         _normalizedZplTab.Text = "Normalized ZPL";
         // 
@@ -585,7 +584,7 @@ partial class MainForm
         _normalizedZplTextBox.Name = "_normalizedZplTextBox";
         _normalizedZplTextBox.ReadOnly = true;
         _normalizedZplTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-        _normalizedZplTextBox.Size = new System.Drawing.Size(428, 516);
+        _normalizedZplTextBox.Size = new System.Drawing.Size(543, 516);
         _normalizedZplTextBox.TabIndex = 0;
         _normalizedZplTextBox.WordWrap = false;
         // 
@@ -594,7 +593,7 @@ partial class MainForm
         _treeTab.Controls.Add(_treeTextBox);
         _treeTab.Location = new System.Drawing.Point(4, 22);
         _treeTab.Name = "_treeTab";
-        _treeTab.Size = new System.Drawing.Size(428, 516);
+        _treeTab.Size = new System.Drawing.Size(543, 516);
         _treeTab.TabIndex = 2;
         _treeTab.Text = "Parser Tree";
         // 
@@ -607,7 +606,7 @@ partial class MainForm
         _treeTextBox.Name = "_treeTextBox";
         _treeTextBox.ReadOnly = true;
         _treeTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-        _treeTextBox.Size = new System.Drawing.Size(428, 516);
+        _treeTextBox.Size = new System.Drawing.Size(543, 516);
         _treeTextBox.TabIndex = 0;
         _treeTextBox.WordWrap = false;
         // 
@@ -616,7 +615,7 @@ partial class MainForm
         _elementsTab.Controls.Add(_elementsGrid);
         _elementsTab.Location = new System.Drawing.Point(4, 22);
         _elementsTab.Name = "_elementsTab";
-        _elementsTab.Size = new System.Drawing.Size(428, 516);
+        _elementsTab.Size = new System.Drawing.Size(543, 516);
         _elementsTab.TabIndex = 3;
         _elementsTab.Text = "Elements";
         // 
@@ -630,7 +629,7 @@ partial class MainForm
         _elementsGrid.Name = "_elementsGrid";
         _elementsGrid.ReadOnly = true;
         _elementsGrid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-        _elementsGrid.Size = new System.Drawing.Size(428, 516);
+        _elementsGrid.Size = new System.Drawing.Size(543, 516);
         _elementsGrid.TabIndex = 0;
         // 
         // _statusLabel
@@ -653,19 +652,23 @@ partial class MainForm
         Icon = (System.Drawing.Icon)resources.GetObject("$this.Icon");
         Name = "MainForm";
         StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-        WindowState = System.Windows.Forms.FormWindowState.Maximized;
         Text = "ZPL Parser Demo";
+        WindowState = System.Windows.Forms.FormWindowState.Maximized;
         _rootSplit.Panel1.ResumeLayout(false);
-        _rootSplit.Panel1.PerformLayout();
         _rootSplit.Panel2.ResumeLayout(false);
         ((System.ComponentModel.ISupportInitialize)_rootSplit).EndInit();
         _rootSplit.ResumeLayout(false);
         _leftToolbar.ResumeLayout(false);
         _leftToolbar.PerformLayout();
+        _leftFooterPanel.ResumeLayout(false);
+        _previewSettingsGroup.ResumeLayout(false);
+        _previewSettingsLayout.ResumeLayout(false);
+        _previewSettingsLayout.PerformLayout();
+        ((System.ComponentModel.ISupportInitialize)_showLabelIndexNumeric).EndInit();
+        ((System.ComponentModel.ISupportInitialize)_showLabelTotalNumeric).EndInit();
         _rightTabs.ResumeLayout(false);
         _previewTab.ResumeLayout(false);
         _previewHost.ResumeLayout(false);
-        _previewHost.PerformLayout();
         ((System.ComponentModel.ISupportInitialize)_previewPictureBox).EndInit();
         _previewToolbar.ResumeLayout(false);
         _previewToolbar.PerformLayout();

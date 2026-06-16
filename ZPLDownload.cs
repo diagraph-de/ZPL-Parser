@@ -30,7 +30,7 @@ public class BaseDownloadGraphics : BaseDownload
         : base(storageDevice)
     {
         ImageName = imageName;
-        Extension = extension;
+        Extension = NormalizeExtension(extension);
         Image = image;
     }
 
@@ -54,7 +54,7 @@ public class BaseDownloadGraphics : BaseDownload
 
         List<string> result;
         result = new List<string>();
-        result.Add(string.Format("~DG{0}:{1}.{2},{3},{4},", StorageDevice, ImageName, Extension, TotalNumberOfBytes,
+        result.Add(string.Format("~DG{0}:{1}{2},{3},{4},", StorageDevice, ImageName, Extension, TotalNumberOfBytes,
             NumberOfBytesPerRow));
 
         //Foreach row
@@ -77,5 +77,13 @@ public class BaseDownloadGraphics : BaseDownload
         }
 
         return result;
+    }
+
+    private static string NormalizeExtension(string? extension)
+    {
+        if (string.IsNullOrWhiteSpace(extension))
+            return string.Empty;
+
+        return extension.StartsWith(".") ? extension : "." + extension.TrimStart('.');
     }
 }
