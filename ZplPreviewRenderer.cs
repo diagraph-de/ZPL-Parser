@@ -9,10 +9,7 @@ using System.Drawing.Text;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using ZXing;
-using ZXing.Common;
-using ZXing.Datamatrix.Encoder;
-using ZXing.QrCode.Internal;
+using ZintSupport = Diagraph.Labelparser.ZPL.ZintSupport;
 
 namespace Diagraph.Labelparser.ZPL;
 
@@ -601,25 +598,22 @@ public sealed class ZplPreviewRenderer
         var barHeight = Math.Max(1, barcode.Height > 0 ? barcode.Height : barcodeDefaults?.Height ?? 10);
         var foreground = state.ReverseField ? state.Background : state.Foreground;
         var background = state.ReverseField ? state.Foreground : state.Background;
-        using var bitmap = CreateLinearBarcodeBitmap(
-            BarcodeFormat.CODE_39,
+        var bitmap = CreateZintLinearBitmap(
+            ZintSupport.BarcodeType.BARCODE_EXCODE39,
             content,
             moduleWidth,
             barHeight,
             barcode.PrintInterpretationLine,
-            barcode.PrintInterpretationLineAboveCode,
+            barcode.Orientation.ToString(),
             foreground,
-            background,
-            10,
-            false,
-            false);
-        ApplyOrientation(bitmap, barcode.Orientation);
+            background);
         DrawBitmap(graphics, ResolveOrigin(barcode.Origin, state), state, bitmap);
         state.PendingBarcodeText = content;
         state.PendingBarcodeOrigin = ResolveOrigin(barcode.Origin, state);
         state.PendingBarcodeBounds = new Rectangle(
             state.OffsetX + (ResolveOrigin(barcode.Origin, state)?.PositionX ?? 0),
             state.OffsetY + (ResolveOrigin(barcode.Origin, state)?.PositionY ?? 0), bitmap.Width, bitmap.Height);
+        bitmap.Dispose();
     }
 
     private static void DrawCode128(Graphics graphics, BarcodeCode128 barcode, RenderState state, List<string> warnings)
@@ -636,25 +630,24 @@ public sealed class ZplPreviewRenderer
         var barHeight = Math.Max(1, barcode.Height > 0 ? barcode.Height : barcodeDefaults?.Height ?? 10);
         var foreground = state.ReverseField ? state.Background : state.Foreground;
         var background = state.ReverseField ? state.Foreground : state.Background;
-        using var bitmap = CreateLinearBarcodeBitmap(
-            BarcodeFormat.CODE_128,
+        var isGs1 = barcode.UCCCheckDigit == Enums.YesNo.Y || IsGs1Payload(content);
+        var bitmap = CreateZintLinearBitmap(
+            isGs1 ? ZintSupport.BarcodeType.BARCODE_EAN128 : ZintSupport.BarcodeType.BARCODE_CODE128,
             content,
             moduleWidth,
             barHeight,
             true,
-            barcode.PrintInterpretationLineAboveCode,
+            barcode.Orientation.ToString(),
             foreground,
             background,
-            10,
-            barcode.UCCCheckDigit == Enums.YesNo.Y,
-            false);
-        ApplyOrientation(bitmap, barcode.Orientation);
+            isGs1);
         DrawBitmap(graphics, ResolveOrigin(barcode.Origin, state), state, bitmap);
         state.PendingBarcodeText = content;
         state.PendingBarcodeOrigin = ResolveOrigin(barcode.Origin, state);
         state.PendingBarcodeBounds = new Rectangle(
             state.OffsetX + (ResolveOrigin(barcode.Origin, state)?.PositionX ?? 0),
             state.OffsetY + (ResolveOrigin(barcode.Origin, state)?.PositionY ?? 0), bitmap.Width, bitmap.Height);
+        bitmap.Dispose();
     }
 
     private static void DrawCodabar(Graphics graphics, BarcodeAnsiCodabar barcode, RenderState state,
@@ -677,26 +670,22 @@ public sealed class ZplPreviewRenderer
         var foreground = state.ReverseField ? state.Background : state.Foreground;
         var background = state.ReverseField ? state.Foreground : state.Background;
 
-        using var bitmap = CreateLinearBarcodeBitmap(
-            BarcodeFormat.CODABAR,
+        var bitmap = CreateZintLinearBitmap(
+            ZintSupport.BarcodeType.BARCODE_CODABAR,
             content,
             moduleWidth,
             barHeight,
             barcode.PrintInterpretationLine,
-            barcode.PrintInterpretationLineAboveCode,
+            barcode.Orientation.ToString(),
             foreground,
-            background,
-            10,
-            false,
-            false,
-            displayContent);
-        ApplyOrientation(bitmap, barcode.Orientation);
+            background);
         DrawBitmap(graphics, ResolveOrigin(barcode.Origin, state), state, bitmap);
         state.PendingBarcodeText = displayContent;
         state.PendingBarcodeOrigin = ResolveOrigin(barcode.Origin, state);
         state.PendingBarcodeBounds = new Rectangle(
             state.OffsetX + (ResolveOrigin(barcode.Origin, state)?.PositionX ?? 0),
             state.OffsetY + (ResolveOrigin(barcode.Origin, state)?.PositionY ?? 0), bitmap.Width, bitmap.Height);
+        bitmap.Dispose();
     }
 
     private static void DrawQrCode(Graphics graphics, BarcodeQR barcode, string content, RenderState state, List<string> warnings)
@@ -707,27 +696,24 @@ public sealed class ZplPreviewRenderer
             return;
         }
 
-        var scale = Math.Max(1, barcode.MagnificationFactor);
         var foreground = state.ReverseField ? state.Background : state.Foreground;
         var background = state.ReverseField ? state.Foreground : state.Background;
-        var hints = new Dictionary<EncodeHintType, object>
-        {
-            [EncodeHintType.MARGIN] = 4,
-            [EncodeHintType.PURE_BARCODE] = true,
-            [EncodeHintType.ERROR_CORRECTION] = MapQrErrorCorrection(barcode.ErrorCorrection)
-        };
-
-        if (IsGs1Payload(content))
-            hints[EncodeHintType.GS1_FORMAT] = true;
-
-        using var bitmap = CreateMatrixBarcodeBitmap(BarcodeFormat.QR_CODE, content, hints,
-            scale,
-            foreground, background);
-        ApplyOrientation(bitmap, barcode.FieldPosition);
+        var bitmap = CreateZintMatrixBitmap(
+            barcode.Model == 1 ? ZintSupport.BarcodeType.BARCODE_MICROQR : ZintSupport.BarcodeType.BARCODE_QRCODE,
+            content,
+            0,
+            MapQrErrorCorrection(barcode.ErrorCorrection),
+            Math.Max(1, barcode.MagnificationFactor),
+            MapOrientation(barcode.FieldPosition),
+            IsGs1Payload(content),
+            barcode.FieldPosition,
+            foreground,
+            background);
         DrawBitmap(graphics, ResolveOrigin(barcode.Origin, state), state, bitmap);
         state.PendingBarcodeText = null;
         state.PendingBarcodeOrigin = null;
         state.PendingBarcodeBounds = null;
+        bitmap.Dispose();
     }
 
     private static void DrawDataMatrix(Graphics graphics, BarcodeDatamatrix barcode, string content, RenderState state,
@@ -739,38 +725,24 @@ public sealed class ZplPreviewRenderer
             return;
         }
 
-        var scale = Math.Max(1, barcode.DMHeight);
         var foreground = state.ReverseField ? state.Background : state.Foreground;
         var background = state.ReverseField ? state.Foreground : state.Background;
-        var hints = new Dictionary<EncodeHintType, object>
-        {
-            [EncodeHintType.MARGIN] = 2,
-            [EncodeHintType.PURE_BARCODE] = true
-        };
-
-        if (IsGs1Payload(content))
-            hints[EncodeHintType.GS1_FORMAT] = true;
-
-        if (barcode.Cols > 0 && barcode.Rows > 0)
-        {
-            var size = new Dimension(barcode.Cols, barcode.Rows);
-            hints[EncodeHintType.MIN_SIZE] = size;
-            hints[EncodeHintType.MAX_SIZE] = size;
-        }
-
-        if (barcode.Cols > 0 && barcode.Rows <= 0)
-            hints[EncodeHintType.DATA_MATRIX_SHAPE] = SymbolShapeHint.FORCE_SQUARE;
-
-        if (barcode.FormatID > 0)
-            hints[EncodeHintType.DATA_MATRIX_DEFAULT_ENCODATION] = barcode.FormatID;
-
-        using var bitmap = CreateMatrixBarcodeBitmap(BarcodeFormat.DATA_MATRIX, content, hints,
-            scale, foreground, background);
-        ApplyOrientation(bitmap, barcode.Orientation);
+        var bitmap = CreateZintMatrixBitmap(
+            ZintSupport.BarcodeType.BARCODE_DATAMATRIX,
+            content,
+            MapDataMatrixVersionOption(barcode.Cols, barcode.Rows),
+            0,
+            Math.Max(1, barcode.DMHeight),
+            MapOrientation(barcode.Orientation),
+            IsGs1Payload(content),
+            barcode.Orientation,
+            foreground,
+            background);
         DrawBitmap(graphics, ResolveOrigin(barcode.Origin, state), state, bitmap);
         state.PendingBarcodeText = null;
         state.PendingBarcodeOrigin = null;
         state.PendingBarcodeBounds = null;
+        bitmap.Dispose();
     }
 
     private static void DrawBitmap(Graphics graphics, FieldOrigin? origin, RenderState state, Bitmap bitmap)
@@ -884,94 +856,190 @@ public sealed class ZplPreviewRenderer
                payload.IndexOf("]d2", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
-    private static ErrorCorrectionLevel MapQrErrorCorrection(Enums.ErrorCorrection errorCorrection)
-    {
-        return errorCorrection switch
-        {
-            Enums.ErrorCorrection.H => ErrorCorrectionLevel.H,
-            Enums.ErrorCorrection.Q => ErrorCorrectionLevel.Q,
-            Enums.ErrorCorrection.M => ErrorCorrectionLevel.M,
-            _ => ErrorCorrectionLevel.L
-        };
-    }
-
     private static int EstimateBarcodeWidth(string? content, int moduleWidth, int quietZone)
     {
         var length = Math.Max(1, content?.Length ?? 1);
         return Math.Max(160, length * moduleWidth * 14 + quietZone * 2);
     }
 
-    private static Bitmap CreateLinearBarcodeBitmap(BarcodeFormat format, string content, int moduleWidth,
-        int barHeight,
-        bool printInterpretationLine, bool printInterpretationLineAboveCode, Color foreground, Color background,
-        int marginModules, bool gs1Format, bool forceCodesetB, string? displayContent = null)
+    private static int MapQrErrorCorrection(Enums.ErrorCorrection errorCorrection)
     {
-        var writer = new MultiFormatWriter();
-        var hints = new Dictionary<EncodeHintType, object>();
-        hints[EncodeHintType.PURE_BARCODE] = true;
-        hints[EncodeHintType.MARGIN] = marginModules;
-        if (gs1Format)
-            hints[EncodeHintType.GS1_FORMAT] = true;
-        if (forceCodesetB)
-            hints[EncodeHintType.CODE128_FORCE_CODESET_B] = true;
-
-        var matrix = writer.encode(content, format, 0, 0, hints);
-        var textHeight = printInterpretationLine ? Math.Max(18, barHeight / 4) : 0;
-        var textSpacing = printInterpretationLine ? 4 : 0;
-        var totalHeight = barHeight + textHeight + textSpacing;
-        var barcodeTop = printInterpretationLine && printInterpretationLineAboveCode
-            ? textHeight + textSpacing
-            : 0;
-        var textTop = printInterpretationLine && printInterpretationLineAboveCode
-            ? 0
-            : barHeight + textSpacing;
-        var quietZone = Math.Max(0, marginModules) * moduleWidth;
-        var matrixWidth = Math.Max(1, matrix.Width * moduleWidth);
-        var bitmapWidth = Math.Max(1, matrixWidth + (quietZone * 2));
-
-        var bitmap = new Bitmap(bitmapWidth, Math.Max(1, totalHeight),
-            PixelFormat.Format24bppRgb);
-        using var graphics = Graphics.FromImage(bitmap);
-        graphics.Clear(background);
-        using var barBrush = new SolidBrush(foreground);
-
-        RenderMatrix(graphics, matrix, moduleWidth, quietZone, barcodeTop, barHeight, barBrush);
-
-        if (printInterpretationLine && !string.IsNullOrEmpty(content))
+        return errorCorrection switch
         {
-            using var font = new Font("Arial Narrow", Math.Max(9, barHeight / 7.6f), FontStyle.Regular,
-                GraphicsUnit.Pixel);
-            var textRect = new Rectangle(0, textTop, bitmap.Width, Math.Max(1, textHeight));
-            var flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
-                        TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix | TextFormatFlags.NoClipping;
-            TextRenderer.DrawText(graphics, displayContent ?? content, font, textRect, foreground, flags);
+            Enums.ErrorCorrection.M => 2,
+            Enums.ErrorCorrection.Q => 3,
+            Enums.ErrorCorrection.H => 4,
+            _ => 1
+        };
+    }
+
+    private static Bitmap CreateZintLinearBitmap(int symbology, string content, int moduleWidth, int barHeight,
+        bool showReadableLine, string orientation, Color foreground, Color background, bool gs1 = false)
+    {
+        var effectiveScale = Math.Max(1, moduleWidth);
+        var zintHeight = Math.Max(1, (barHeight / effectiveScale) - 9);
+        var command = new ZintSupport.ZintCmd
+        {
+            BarcodeType = symbology,
+            HasReadableLine = showReadableLine,
+            Height = zintHeight,
+            MinimumHeight = zintHeight,
+            Option_1 = 0,
+            Option_2 = 0,
+            InputMode = gs1 ? ZintSupport.InputMode.GS1_MODE : ZintSupport.InputMode.DATA_MODE,
+            ScaleInput = effectiveScale,
+            ScaleOutput = 1,
+            Value = content,
+            Encoding = Encoding.GetEncoding(1252),
+            Angle = OrientationToAngle(orientation)
+        };
+
+        var symbol = new ZintSupport.Zint.zint_symbol();
+        var bitmap = command.RefreshBarcode(ref symbol);
+        if (foreground.ToArgb() != Color.Black.ToArgb() || background.ToArgb() != Color.White.ToArgb())
+            bitmap = RecolorBitmap(bitmap, foreground, background);
+        return bitmap;
+    }
+
+    private static Bitmap CreateZintMatrixBitmap(int symbology, string content, int option2, int option1, int scale,
+        int angle, bool gs1, string orientation, Color foreground, Color background)
+    {
+        var command = new ZintSupport.ZintCmd
+        {
+            BarcodeType = symbology,
+            HasReadableLine = false,
+            Height = 0,
+            MinimumHeight = 0,
+            Option_1 = option1,
+            Option_2 = option2,
+            InputMode = gs1 ? ZintSupport.InputMode.GS1_MODE : ZintSupport.InputMode.DATA_MODE,
+            ScaleInput = 1,
+            ScaleOutput = Math.Max(1, scale),
+            Value = content,
+            Encoding = Encoding.GetEncoding(1252),
+            Angle = angle
+        };
+
+        var symbol = new ZintSupport.Zint.zint_symbol();
+        var bitmap = command.RefreshBarcode(ref symbol);
+        if (foreground.ToArgb() != Color.Black.ToArgb() || background.ToArgb() != Color.White.ToArgb())
+            bitmap = RecolorBitmap(bitmap, foreground, background);
+        return bitmap;
+    }
+
+    private static Bitmap RecolorBitmap(Bitmap bitmap, Color foreground, Color background)
+    {
+        if (foreground.ToArgb() == Color.Black.ToArgb() && background.ToArgb() == Color.White.ToArgb())
+            return bitmap;
+
+        var recolored = new Bitmap(bitmap.Width, bitmap.Height);
+        using (var graphics = Graphics.FromImage(recolored))
+        {
+            graphics.Clear(background);
+            using var attributes = new ImageAttributes();
+            var matrix = new ColorMatrix(new[]
+            {
+                new[] {(background.R - foreground.R) / 255f, 0f, 0f, 0f, foreground.R / 255f},
+                new[] {0f, (background.G - foreground.G) / 255f, 0f, 0f, foreground.G / 255f},
+                new[] {0f, 0f, (background.B - foreground.B) / 255f, 0f, foreground.B / 255f},
+                new[] {0f, 0f, 0f, 1f, 0f},
+                new[] {0f, 0f, 0f, 0f, 1f}
+            });
+            attributes.SetColorMatrix(matrix);
+            graphics.DrawImage(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height), 0, 0, bitmap.Width,
+                bitmap.Height, GraphicsUnit.Pixel, attributes);
         }
 
-        return bitmap;
+        bitmap.Dispose();
+        return recolored;
     }
 
-    private static Bitmap CreateMatrixBarcodeBitmap(BarcodeFormat format, string content,
-        IDictionary<EncodeHintType, object> hints,
-        int scale, Color foreground, Color background)
+    private static int OrientationToAngle(string? orientation)
     {
-        var writer = new MultiFormatWriter();
-        var matrix = writer.encode(content, format, 0, 0, hints);
-        var bitmap = new Bitmap(Math.Max(1, matrix.Width * scale), Math.Max(1, matrix.Height * scale),
-            PixelFormat.Format24bppRgb);
-        using var graphics = Graphics.FromImage(bitmap);
-        graphics.Clear(background);
-        using var barBrush = new SolidBrush(foreground);
-        RenderMatrix(graphics, matrix, scale, 0, 0, scale, barBrush);
-        return bitmap;
+        return (orientation ?? string.Empty).Trim().ToUpperInvariant() switch
+        {
+            "R" => 90,
+            "I" => 180,
+            "B" => 270,
+            _ => 0
+        };
     }
 
-    private static void RenderMatrix(Graphics graphics, BitMatrix matrix, int scale, int leftOffset, int topOffset, int rowScale,
-        Brush brush)
+    private static int MapOrientation(string? orientation) => OrientationToAngle(orientation);
+
+    private static int MapQrVersionOption(int cols, int rows)
     {
-        for (var y = 0; y < matrix.Height; y++)
-        for (var x = 0; x < matrix.Width; x++)
-            if (matrix[x, y])
-                graphics.FillRectangle(brush, leftOffset + x * scale, topOffset + y * rowScale, scale, rowScale);
+        var sizes = new[]
+        {
+            "Auto",
+            "21x21",
+            "25x25",
+            "29x29",
+            "33x33",
+            "37x37",
+            "41x41",
+            "45x45",
+            "49x49",
+            "53x53",
+            "57x57",
+            "61x61",
+            "65x65",
+            "69x69",
+            "73x73",
+            "77x77",
+            "81x81",
+            "85x85",
+            "89x89",
+            "93x93",
+            "97x97",
+            "101x101",
+            "105x105",
+            "109x109",
+            "113x113",
+            "117x117",
+            "121x121",
+            "125x125",
+            "129x129",
+            "133x133",
+            "137x137",
+            "141x141",
+            "145x145",
+            "149x149",
+            "153x153",
+            "157x157",
+            "161x161",
+            "165x165",
+            "169x169",
+            "173x173",
+            "177x177"
+        };
+
+        var wanted = $"{cols}x{rows}";
+        for (var index = 1; index < sizes.Length; index++)
+        {
+            if (string.Equals(sizes[index], wanted, StringComparison.OrdinalIgnoreCase))
+                return index;
+        }
+
+        return 0;
+    }
+
+    private static int MapDataMatrixVersionOption(int cols, int rows)
+    {
+        var sizes = new[]
+        {
+            "Auto", "10x10", "12x12", "14x14", "16x16", "18x18", "20x20", "22x22", "24x24", "26x26",
+            "32x32", "36x36", "40x40", "44x44", "48x48", "52x52"
+        };
+
+        var wanted = $"{cols}x{rows}";
+        for (var index = 1; index < sizes.Length; index++)
+        {
+            if (string.Equals(sizes[index], wanted, StringComparison.OrdinalIgnoreCase))
+                return index;
+        }
+
+        return 0;
     }
 
     private static void ApplyOrientation(Bitmap bitmap, Enums.Orientation orientation)

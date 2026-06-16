@@ -2,11 +2,13 @@
 
 `ZPL-Parser` is a C# library for parsing and rebuilding Zebra Programming Language labels.
 The repository also includes a WinForms demo that exercises the parser and shows a live preview on the right side while you edit ZPL on the left.
+Barcode rendering is handled fully locally through the bundled Zint-based implementation in the core project.
 
 ## What is included
 
 - `Labelparser-ZPL.csproj` — core parser, ZPL object model, and preview renderer helper
 - `Demo/ZPLParser.Demo.WinForms.csproj` — WinForms demo that consumes the core library
+- `Zint/` — local barcode engine wrapper plus native runtime files copied to the output folder
 - `ZPL-Parser.sln` — solution containing both projects
 - `ZPLIIcommandreference.pdf` — Zebra command reference shipped with the repo
 
@@ -30,7 +32,7 @@ It includes sample buttons for:
 - the reference shipping label used for pixel checks against the local renderer
 
 The preview renderer lives in the core project and renders labels locally so the demo can show a pixel-matched label preview.
-Barcode rendering now uses a real barcode engine in the core project, including GS1-aware Code 128 and matrix code support.
+Barcode rendering now uses a real barcode engine in the core project, including GS1-aware Code 128, QR, Micro QR, and Data Matrix support.
 
 ## Current parser coverage
 
@@ -83,5 +85,7 @@ var normalized = new ZPLEngine(elements).ToZPLString(new ZPLRenderOptions
 ## Notes
 
 - The core library targets .NET Framework 4.8.
+- The WinForms demo is built as x86 so the bundled native Zint barcode engine loads reliably.
 - `Test.cs` contains example snippets rather than an automated test suite.
 - The solution builds successfully with the demo project and the renderer helper now lives in the core library.
+- Native Zint files are copied into `bin\AnyCPU\<Configuration>\zint\` during build.

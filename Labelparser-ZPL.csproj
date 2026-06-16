@@ -104,10 +104,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="zxing.portable">
-      <HintPath>lib\ZXing\zxing.portable.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -176,6 +172,8 @@
     <Compile Include="BaseElement.cs" />
     <Compile Include="ZPLEngine.cs" />
     <Compile Include="GraphicBox.cs" />
+    <Compile Include="Zint\zint.cs" />
+    <Compile Include="Zint\ZintCommand.cs" />
     <Compile Include="ZplPreviewRenderer.cs" />
     <Compile Include="ZPLRenderOptions.cs" />
     <Compile Include="PreviewModels.cs" />
@@ -209,21 +207,37 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Zint\licence.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Zint\zint.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Zint\libzint.so">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Target Name="MirrorOutputsToNormalizedFolder" AfterTargets="Build">
     <PropertyGroup>
       <NormalizedOutputDir>$(MSBuildProjectDirectory)\bin\AnyCPU\$(Configuration)\</NormalizedOutputDir>
     </PropertyGroup>
     <MakeDir Directories="$(NormalizedOutputDir)" />
+    <MakeDir Directories="$(NormalizedOutputDir)zint" />
     <ItemGroup>
       <_NormalizedOutputFiles Include="$(TargetPath)" />
       <_NormalizedOutputFiles Include="$(TargetDir)$(TargetName).pdb" Condition="Exists('$(TargetDir)$(TargetName).pdb')" />
-      <_NormalizedOutputFiles Include="$(TargetDir)zxing.portable.dll" Condition="Exists('$(TargetDir)zxing.portable.dll')" />
     </ItemGroup>
-    <Copy
-      SourceFiles="@(_NormalizedOutputFiles)"
-      DestinationFiles="@(_NormalizedOutputFiles->'$(NormalizedOutputDir)%(Filename)%(Extension)')"
-      SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(_NormalizedOutputFiles)" DestinationFiles="@(_NormalizedOutputFiles->'$(NormalizedOutputDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <ItemGroup>
+      <_ZintNativeFiles Include="$(MSBuildProjectDirectory)\Zint\zint.dll" Condition="Exists('$(MSBuildProjectDirectory)\Zint\zint.dll')" />
+      <_ZintNativeFiles Include="$(MSBuildProjectDirectory)\Zint\libzint.so" Condition="Exists('$(MSBuildProjectDirectory)\Zint\libzint.so')" />
+      <_ZintNativeFiles Include="$(MSBuildProjectDirectory)\Zint\licence.txt" Condition="Exists('$(MSBuildProjectDirectory)\Zint\licence.txt')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_ZintNativeFiles)" DestinationFolder="$(NormalizedOutputDir)zint" SkipUnchangedFiles="true" />
   </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
