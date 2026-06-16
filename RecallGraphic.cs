@@ -27,10 +27,12 @@ public class RecallGraphic : PositionedElement
             this.properties = this.properties.Replace(",,", ",0,");
 
         var sp = this.properties.Split(',');
+        var fileName = sp[0].Split(':')[1];
+        var extensionIndex = fileName.LastIndexOf('.');
 
         StorageDevice = sp[0].Split(':')[0] + ":";
-        ImageName = sp[0].Split(':')[1].Split('.')[0];
-        Extension = "." + sp[0].Split(':')[1].Split('.')[1];
+        ImageName = extensionIndex >= 0 ? fileName.Substring(0, extensionIndex) : fileName;
+        Extension = extensionIndex >= 0 ? NormalizeExtension(fileName.Substring(extensionIndex)) : string.Empty;
         MagnificationFactorX = Convert.ToInt16(sp[1]);
         MagnificationFactorY = Convert.ToInt16(sp[2]);
     }
@@ -42,7 +44,7 @@ public class RecallGraphic : PositionedElement
     {
         StorageDevice = storageDevice + ":";
         ImageName = imageName;
-        Extension = extension;
+        Extension = NormalizeExtension(extension);
         MagnificationFactorX = magnificationFactorX;
         MagnificationFactorY = magnificationFactorY;
     }
@@ -75,5 +77,13 @@ public class RecallGraphic : PositionedElement
             MagnificationFactorY));
 
         return result;
+    }
+
+    private static string NormalizeExtension(string? extension)
+    {
+        if (string.IsNullOrWhiteSpace(extension))
+            return string.Empty;
+
+        return extension.StartsWith(".") ? extension : "." + extension.TrimStart('.');
     }
 }

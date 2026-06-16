@@ -368,11 +368,10 @@ internal sealed partial class MainForm : Form
     private string BuildOverviewSample()
     {
         var graphic = CreateDemoGraphic();
-        var imageZpl = ImageHelper.ZPLfromBitmap(graphic, false);
         var engine = new ZPLEngine(new BaseElement[]
         {
-            new PrintWidth(900),
-            new LabelLength(820),
+            new PrintWidth(960),
+            new LabelLength(1200),
             new LabelHome(0, 0),
             new LabelTop(0),
             new LabelShfit(0),
@@ -382,23 +381,21 @@ internal sealed partial class MainForm : Form
             new TextField(40, 36, "ZPL Parser Demo", new ScalableBitmappedFont(42, 42)),
             new TextField(40, 94, "Live preview, parser tree, normalized ZPL and element list",
                 new ScalableBitmappedFont(18, 18), useHexadecimalIndicator: false),
-            new FieldBlock(40, 140, "Field block text wraps across multiple lines and shows the ^FB command.", 320,
+            new FieldBlock(40, 142, "Field block text wraps across multiple lines and shows the field block command.", 400,
                 new ScalableBitmappedFont(18, 18), 3, 4),
-            new TextBlock(40, 240, "Text block preview with ^TB support\nand multiple lines.", 320, 90,
-                new ScalableBitmappedFont(18, 18), NewLineConversionMethod.ToZPLNewLine),
-            new GraphicBox(400, 48, 180, 90, 4),
-            new GraphicCircle(620, 48, 90, 4),
-            new GraphicEllipse(740, 48, 120, 70, 4),
-            new GraphicDiagonalLine(400, 170, 180, 90, 4, true),
-            new GraphicSymbol(Enums.GraphicSymbolCharacter.Copyright, 640, 160, 56, 56),
-            new BarcodeCode39(40, 380, "ZPL-39", 70),
-            new BarcodeCode128(280, 380, "ZPL-128", 70),
-            new BarcodeAnsiCodabar(520, 380, "123456789", 70, 'A', 'B'),
-            new BarcodeQR(40, 530, "https://example.com/zpl"),
-            new BarcodeDatamatrix(220, 520, "DATA-MATRIX"),
+            new TextBlock(40, 250, "Text block preview with text block support.", 400, 90,
+                new ScalableBitmappedFont(18, 18), NewLineConversionMethod.ToSpace),
+            new GraphicBox(520, 48, 140, 84, 4),
+            new GraphicCircle(700, 48, 84, 4),
+            new GraphicEllipse(812, 48, 104, 68, 4),
+            new BarcodeCode39(40, 390, "ABC12345", 72),
+            new BarcodeCode128(40, 560, "ABC12345", 72),
+            new BarcodeAnsiCodabar(40, 730, "12345678", 72, 'A', 'B'),
+            new BarcodeQR(40, 900, "https://example.com/zpl"),
+            new BarcodeDatamatrix(360, 900, "DATA-MATRIX", "N", 10),
             new BaseDownloadGraphics('R', "DEMO", ".GRF", graphic),
-            new RecallGraphic(620, 520, 'R', "DEMO", ".GRF", 2, 2),
-            new BaseRaw("^FO40,720^GB820,2,2,B,0^FS")
+            new RecallGraphic(640, 885, 'R', "DEMO", ".GRF", 2, 2),
+            new BaseRaw("^FO40,1120^GB880,2,2,B,0^FS")
         });
 
         return engine.ToZPLString(new ZPLRenderOptions { DisplayComments = true });
@@ -407,34 +404,38 @@ internal sealed partial class MainForm : Form
     private string BuildGraphicsSample()
     {
         var graphic = CreateDemoGraphic();
-        var imageZpl = ImageHelper.ZPLfromBitmap(graphic, false);
+        var engine = new ZPLEngine(new BaseElement[]
+        {
+            new PrintWidth(800),
+            new LabelLength(700),
+            new LabelHome(0, 0),
+            new LabelTop(0),
+            new LabelShfit(0),
+            new PrintMode(),
+            new Comment("Graphics sample with shapes and stored image recall"),
+            new GraphicBox(90, 40, 180, 120, 4),
+            new GraphicCircle(320, 40, 100, 4),
+            new GraphicEllipse(460, 40, 150, 96, 4),
+            new BaseDownloadGraphics('R', "DEMO", ".GRF", graphic),
+            new RecallGraphic(90, 270, 'R', "DEMO", ".GRF", 3, 3),
+            new BaseRaw("^FO90,540^FDGraphics sample: shapes, download and recall^FS")
+        });
 
-        return
-            $@"^XA
-^PW800
-^LL520
-^FO40,40^GB200,120,4,B,0^FS
-^FO280,40^GC100,4,B^FS
-^FO420,40^GD160,100,4,B,R^FS
-^FO610,40^GE140,100,4,B^FS
-^FO40,220{imageZpl.Result}^FS
-^FO290,220^XGR:DEMO.GRF,2,2^FS
-^FO40,380^FDGraphics sample: download, recall and direct graphic field^FS
-^XZ";
+        return engine.ToZPLString(new ZPLRenderOptions { DisplayComments = true });
     }
 
     private string BuildBarcodeSample()
     {
         return
             @"^XA
-^PW760
-^LL520
-^FO40,40^A0N,36,36^FDBarcodes^FS
-^FO40,100^B3N,N,80,Y,N^FDABC12345^FS
-^FO40,230^BCN,90,Y,N,N^FD1234567890^FS
-^FO40,360^BQN,2,7^FDLA,https://openai.com^FS
-^FO340,230^BXN,8,200,0,0,1,_,1^FD7,DATA-MATRIX^FS
-^FO340,360^BKN,Y,80,Y,N,A,A^FD1234-ABCD^FS
+^PW980
+^LL1280
+^FO40,40^A0N,42,42^FDBarcodes^FS
+^FO40,120^B3N,N,96,Y,N^FDABC12345^FS
+^FO40,320^BCN,110,Y,N,N^FDABC12345^FS
+^FO40,540^BQN,2,8^FDLA,https://openai.com^FS
+^FO390,540^BXN,10,0,24,24,1,_,1^FD7,DATA-MATRIX^FS
+^FO40,860^BKN,Y,110,Y,N,A,A^FD1234-ABCD^FS
 ^XZ";
     }
 

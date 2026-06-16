@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 
 namespace Diagraph.Labelparser.ZPL;
@@ -22,12 +23,27 @@ public class DownloadGraphic : BaseElement
 
         var sp = this.properties.Split(',');
 
+        var fileName = sp[0].Split(':')[1];
+        var extensionIndex = fileName.LastIndexOf('.');
         DestinationDevice = sp[0].Split(':')[0] + ":";
-        ImageName = sp[0].Split(':')[1].Split('.')[0];
-        FileNameExtension = "." + sp[0].Split(':')[1].Split('.')[1];
+        ImageName = extensionIndex >= 0 ? fileName.Substring(0, extensionIndex) : fileName;
+        FileNameExtension = extensionIndex >= 0 ? NormalizeExtension(fileName.Substring(extensionIndex)) : string.Empty;
         TotalNumberOfBytes = Convert.ToInt16(sp[1]);
         NumberOfRows = Convert.ToInt16(sp[2]);
-        Data = Encoding.ASCII.GetBytes(sp[3]);
+        var data = sp.Length > 3 ? string.Join(",", sp.Skip(3)) : string.Empty;
+        Data = Encoding.ASCII.GetBytes(data);
+
+        if (!string.IsNullOrWhiteSpace(data) && NumberOfRows > 0)
+        {
+            try
+            {
+                Image = new ImageHelper().BinaryToBitmap(Data, NumberOfRows * 8, TotalNumberOfBytes / NumberOfRows, false);
+            }
+            catch
+            {
+                Image = null;
+            }
+        }
 
         //try
         //{
@@ -47,12 +63,12 @@ public class DownloadGraphic : BaseElement
     {
         DestinationDevice = destinationDevice;
         ImageName = imageName;
-        FileNameExtension = fileNameExtension;
+        FileNameExtension = NormalizeExtension(fileNameExtension);
         TotalNumberOfBytes = totalNumberOfBytes;
         NumberOfRows = numberOfRows;
         Data = Encoding.ASCII.GetBytes(data);
 
-        Image = new ImageHelper().BinaryToBitmap(Data, numberOfRows, totalNumberOfBytes / numberOfRows, compressed);
+        Image = new ImageHelper().BinaryToBitmap(Data, numberOfRows * 8, totalNumberOfBytes / numberOfRows, compressed);
     }
 
     public static DownloadGraphic Current
@@ -78,5 +94,13 @@ public class DownloadGraphic : BaseElement
             NumberOfRows + "," + Data
         };
         return result;
+    }
+
+    private static string NormalizeExtension(string? extension)
+    {
+        if (string.IsNullOrWhiteSpace(extension))
+            return string.Empty;
+
+        return extension.StartsWith(".") ? extension : "." + extension.TrimStart('.');
     }
 }

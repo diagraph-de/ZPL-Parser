@@ -9,14 +9,16 @@
     <AssemblyName>ZPLParser.Demo.WinForms</AssemblyName>
     <RootNamespace>ZPLParser.Demo</RootNamespace>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <StartupObject>ZPLParser.Demo.Program</StartupObject>
+    <ApplicationIcon>Diagraph.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup Condition="'$(DesignTimeBuild)' != 'true'">
     <ProjectReference Include="..\Labelparser-ZPL.csproj" />
   </ItemGroup>
-  <ItemGroup Condition="'$(DesignTimeBuild)' == 'true'">
-    <Reference Include="Labelparser-ZPL">
-      <HintPath>..\bin\Any CPU\Debug\Labelparser-ZPL.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
+  <ItemGroup>
+    <Content Include="Diagraph.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Labelparser-ZPL.csproj" />
   </ItemGroup>
 </Project>
